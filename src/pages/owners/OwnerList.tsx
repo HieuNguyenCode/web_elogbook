@@ -4,6 +4,7 @@ import type { ShipOwner, ShipOwnerPayload } from '../../types/ShipOwner';
 import { Plus, Pencil, Trash2, AlertCircle, Eye, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import OwnerModal from './OwnerModal';
 import { axiosClient } from '../../utils/axiosClient';
+import { useToast } from '../../components/ToastContext';
 
 type ModalMode = 'view' | 'create' | 'edit';
 
@@ -23,6 +24,8 @@ export default function OwnerList() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState<ModalMode>('create');
     const [selectedOwner, setSelectedOwner] = useState<ShipOwner | null>(null);
+
+    const { success, error: showError } = useToast();
 
     useEffect(() => {
         fetchOwners(search, page);
@@ -66,11 +69,11 @@ export default function OwnerList() {
         try {
             if (modalMode === 'create') {
                 await createShipOwnerAPI(payload);
-                alert('Thêm chủ tàu thành công!');
+                success('Thêm chủ tàu thành công!');
                 setPage(1);
             } else if (modalMode === 'edit' && selectedOwner) {
                 await updateShipOwnerAPI(selectedOwner.id, payload);
-                alert('Cập nhật thông tin thành công!');
+                success('Cập nhật thông tin thành công!');
             }
             fetchOwners(search, page); // Tải lại trang hiện tại
         } catch (err: any) {
@@ -82,10 +85,10 @@ export default function OwnerList() {
         if (window.confirm(`Bạn có chắc chắn muốn xóa chủ tàu ${owner.fullName} không?`)) {
             try {
                 await axiosClient.delete(`/api/v1/Admin/ShipOwner/${owner.id}`);
-                alert('Xóa thành công!');
+                success('Xóa thành công!');
                 fetchOwners(search, page);
             } catch (err: any) {
-                alert('Lỗi khi xóa: ' + (err.message || 'Không thể xóa'));
+                showError('Xóa thất bại!');
             }
         }
     };

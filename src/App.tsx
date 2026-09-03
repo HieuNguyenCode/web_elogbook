@@ -10,6 +10,7 @@ import type {JSX} from "react";
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { config } from './config/config';
+import { ToastProvider } from './components/ToastContext';
 
 // Component bảo vệ các route yêu cầu đăng nhập
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
@@ -75,29 +76,31 @@ export default function App() {
     }
 
     return (
-        <BrowserRouter>
-            <Routes>
-                <Route path="/login" element={
-                    <PublicRoute>
-                        <LoginWrapper />
-                    </PublicRoute>
-                } />
-                
-                {/* Các route bên trong MainLayout */}
-                <Route path="/" element={
-                    <ProtectedRoute>
-                        <MainLayout />
-                    </ProtectedRoute>
-                }>
-                    <Route index element={<Overview />} />
-                    <Route path="departures" element={<DepartureList />} />
-                    <Route path="arrivals" element={<ArrivalList />} />
-                    <Route path="ships" element={<ShipList />} />
-                    <Route path="owners" element={<OwnerList />} />
-                </Route>
-                
-                <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-        </BrowserRouter>
+        <ToastProvider>
+            <BrowserRouter>
+                <Routes>
+                    <Route path="/login" element={
+                        <PublicRoute>
+                            <LoginWrapper />
+                        </PublicRoute>
+                    } />
+                    
+                    {/* Các route bên trong MainLayout */}
+                    <Route path="/" element={
+                        <ProtectedRoute>
+                            <MainLayout />
+                        </ProtectedRoute>
+                    }>
+                        <Route index element={<Overview />} />
+                        <Route path="departures" element={<DepartureList />} />
+                        <Route path="arrivals" element={<ArrivalList />} />
+                        <Route path="ships" element={<ShipList />} />
+                        <Route path="owners" element={<OwnerList />} />
+                    </Route>
+                    
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+            </BrowserRouter>
+        </ToastProvider>
     );
 }

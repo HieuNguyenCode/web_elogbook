@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
 import { listShipAPI, createShipAPI, updateShipAPI } from '../../features/API/ship/Ship.ts';
-import type { Ship, ShipPayload } from '../../types/Ship';
+import type { Ship, ShipResponse } from '../../types/Ship';
 import { Plus, Pencil, Trash2, AlertCircle, Eye, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import ShipModal from './ShipModal';
 import { axiosClient } from '../../utils/axiosClient';
+import { useToast } from '../../components/ToastContext';
 
 type ModalMode = 'view' | 'create' | 'edit';
 
@@ -24,6 +25,8 @@ export default function ShipList() {
     const [modalMode, setModalMode] = useState<ModalMode>('create');
     const [selectedShip, setSelectedShip] = useState<Ship | null>(null);
 
+    const { success, error: showError } = useToast();
+
     useEffect(() => {
         fetchShips(search, page);
     }, [page]); 
@@ -37,7 +40,7 @@ export default function ShipList() {
             setTotalPages(response.totalPages || 1);
             setTotalCount(response.totalCount || 0);
         } catch (err: any) {
-            setError(err.message || 'Không thể tải danh sách tàu');
+            showError('Không thể tải danh sách tàu');
         } finally {
             setIsLoading(false);
         }
@@ -61,15 +64,13 @@ export default function ShipList() {
         setIsModalOpen(true);
     };
 
-    const handleModalSubmit = async (payload: ShipPayload) => {
+    const handleModalSubmit = async (payload: ShipResponse) => {
         try {
             if (modalMode === 'create') {
                 await createShipAPI(payload);
-                alert('Thêm tàu thành công!');
                 setPage(1);
             } else if (modalMode === 'edit' && selectedShip) {
                 await updateShipAPI(selectedShip.id, payload);
-                alert('Cập nhật thông tin thành công!');
             }
             fetchShips(search, page);
         } catch (err: any) {
@@ -81,10 +82,10 @@ export default function ShipList() {
         if (window.confirm(`Bạn có chắc chắn muốn xóa tàu ${ship.name} không?`)) {
             try {
                 await axiosClient.delete(`/api/v1/Admin/Ship/${ship.id}`);
-                alert('Xóa thành công!');
+                success('Xóa tàu thành công!');
                 fetchShips(search, page);
             } catch (err: any) {
-                alert('Lỗi khi xóa: ' + (err.message || 'Không thể xóa'));
+                showError('Xóa tàu thất bại!');
             }
         }
     };

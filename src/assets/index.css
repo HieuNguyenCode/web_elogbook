@@ -78,6 +78,7 @@ button, input, select, textarea {
 
 /* Layout & Spacing */
 .flex { display: flex; }
+.flex-1 { flex: 1 1 0%; }
 .flex-col { display: flex; flex-direction: column; }
 .items-center { align-items: center; }
 .justify-center { justify-content: center; }
