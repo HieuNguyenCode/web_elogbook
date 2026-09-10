@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import type { ShipOwner, ShipOwnerPayload } from '../../types/ShipOwner';
 import type { ServiceResponse } from '../../types/api';
 import { shipOwnerDetailAPI } from '../../features/API/shipOwner/ShipOwner.ts';
+import { parseDDMMYYYYToISO, handleDateChange, normalizeDateOnBlur, saveOwnerBirthDate, getOwnerBirthDate } from '../../utils/dateUtils.ts';
 
 type ModalMode = 'view' | 'create' | 'edit';
 
@@ -34,13 +35,16 @@ export default function OwnerModal({ isOpen, mode, owner, onClose, onSubmit }: O
             setIsFetchingDetail(true);
             shipOwnerDetailAPI(owner.id)
                 .then(fullOwner => {
+                    const dob = getOwnerBirthDate(owner.id, fullOwner.citizenId || owner.citizenId, fullOwner.birthDate);
+                    if (fullOwner.phone) localStorage.setItem(`owner_phone_${owner.id}`, fullOwner.phone);
+                    if (fullOwner.address) localStorage.setItem(`owner_address_${owner.id}`, fullOwner.address);
                     setFormData({
                         fullName: fullOwner.fullName || '',
                         citizenId: fullOwner.citizenId || '',
                         phone: fullOwner.phone || '',
                         email: fullOwner.email || '',
                         address: fullOwner.address || '',
-                        birthDate: fullOwner.birthDate || ''
+                        birthDate: dob
                     });
                 })
                 .catch(() => {
@@ -75,9 +79,20 @@ export default function OwnerModal({ isOpen, mode, owner, onClose, onSubmit }: O
         setIsLoading(true);
         
         try {
+            // Lưu Ngày sinh, số điện thoại, địa chỉ vào cache
+            saveOwnerBirthDate(owner?.id, formData.citizenId, formData.birthDate);
+            if (owner?.id) {
+                if (formData.phone) localStorage.setItem(`owner_phone_${owner.id}`, formData.phone);
+                if (formData.address) localStorage.setItem(`owner_address_${owner.id}`, formData.address);
+            }
+
             // Chuẩn hóa dữ liệu trước khi gửi (VD: chuỗi rỗng thì chuyển thành undefined để Backend không bị lỗi parse Date)
             const payload = { ...formData };
-            if (!payload.birthDate) payload.birthDate = undefined;
+            if (payload.birthDate) {
+                payload.birthDate = parseDDMMYYYYToISO(payload.birthDate);
+            } else {
+                payload.birthDate = undefined;
+            }
             if (!payload.phone) payload.phone = undefined;
             if (!payload.email) payload.email = undefined;
             if (!payload.address) payload.address = undefined;
@@ -174,10 +189,19 @@ export default function OwnerModal({ isOpen, mode, owner, onClose, onSubmit }: O
                             <div className="flex-1">
                                 <label className="form-label" style={{ display: 'block', fontSize: '14px', marginBottom: '4px', fontWeight: 500 }}>Ngày sinh</label>
                                 <input 
-                                    type="date"
+                                    type="text"
                                     name="birthDate"
-                                    value={formData.birthDate?.substring(0, 10)} 
-                                    onChange={handleChange}
+                                    placeholder="dd/MM/yyyy"
+                                    maxLength={10}
+                                    value={formData.birthDate || ''} 
+                                    onChange={(e) => {
+                                        const next = handleDateChange(e.target.value, formData.birthDate || '');
+                                        setFormData({ ...formData, birthDate: next });
+                                    }}
+                                    onBlur={(e) => {
+                                        const normalized = normalizeDateOnBlur(e.target.value);
+                                        setFormData({ ...formData, birthDate: normalized });
+                                    }}
                                     className="input"
                                     readOnly={isReadOnly}
                                     style={{ backgroundColor: isReadOnly ? '#f1f5f9' : 'white', borderColor: getError('birthDate') ? 'var(--error-color)' : undefined }}
@@ -185,19 +209,7 @@ export default function OwnerModal({ isOpen, mode, owner, onClose, onSubmit }: O
                                 {getError('birthDate') && <span style={{ color: 'var(--error-color)', fontSize: '12px', marginTop: '4px', display: 'block' }}>{getError('birthDate')}</span>}
                             </div>
                         </div>
-                        <div>
-                            <label className="form-label" style={{ display: 'block', fontSize: '14px', marginBottom: '4px', fontWeight: 500 }}>Email</label>
-                            <input 
-                                type="email"
-                                name="email"
-                                value={formData.email} 
-                                onChange={handleChange}
-                                className="input" 
-                                readOnly={isReadOnly}
-                                style={{ backgroundColor: isReadOnly ? '#f1f5f9' : 'white', borderColor: getError('email') ? 'var(--error-color)' : undefined }}
-                            />
-                            {getError('email') && <span style={{ color: 'var(--error-color)', fontSize: '12px', marginTop: '4px', display: 'block' }}>{getError('email')}</span>}
-                        </div>
+
                         <div>
                             <label className="form-label" style={{ display: 'block', fontSize: '14px', marginBottom: '4px', fontWeight: 500 }}>Địa chỉ</label>
                             <input 

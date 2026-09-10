@@ -1,59 +1,119 @@
 .layout-container {
     background-color: var(--bg-main);
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
 }
 
 .sidebar {
     width: 260px;
-    background-color: #0f172a; /* Đậm và sang hơn */
+    background-color: #0f172a;
     color: #94a3b8;
-    box-shadow: 2px 0 8px rgba(0,0,0,0.1);
-    z-index: 10;
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.12);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar-header {
-    padding: var(--space-xl) var(--space-lg);
-    font-size: 1.125rem;
+    padding: 1.25rem 1.25rem;
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-logo-badge {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+}
+
+.sidebar-title {
+    font-size: 1rem;
     font-weight: 700;
-    color: #f8fafc;
-    border-bottom: 1px solid #1e293b;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    color: #ffffff;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+}
+
+.sidebar-subtitle {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #38bdf8;
+    letter-spacing: 0.08em;
 }
 
 .nav-menu {
     flex: 1;
     overflow-y: auto;
-    padding: var(--space-md) var(--space-sm);
+    padding: 1rem 0.75rem;
 }
 
 .nav-item {
-    /* Xóa display block cũ, dùng flex từ class ngoài */
-    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    padding: 0.65rem 0.95rem;
     color: #cbd5e1;
-    transition: all 0.2s ease;
-    border-radius: var(--radius-md);
-    margin-bottom: 0.25rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 8px;
+    margin-bottom: 0.3rem;
     font-weight: 500;
+    font-size: 13.5px;
+    text-decoration: none;
+    position: relative;
 }
 
 .nav-item:hover {
     background-color: #1e293b;
-    color: #f8fafc;
+    color: #ffffff;
+    transform: translateX(2px);
 }
 
 .nav-item.active {
-    background-color: var(--primary-color);
-    color: white;
-    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+    background: linear-gradient(90deg, rgba(37, 99, 235, 0.25) 0%, rgba(37, 99, 235, 0.08) 100%);
+    color: #60a5fa;
+    border-left: 3px solid #3b82f6;
+    font-weight: 600;
+}
+
+button.nav-item {
+    font-family: inherit;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.nav-item.active-parent {
+    background: rgba(37, 99, 235, 0.12);
+    color: #93c5fd;
 }
 
 .sub-menu {
-    margin-bottom: var(--space-sm);
+    margin-bottom: 0.5rem;
+    animation: submenuFadeIn 0.2s ease-out;
+}
+
+@keyframes submenuFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .sub-menu .nav-item {
-    padding: 0.6rem 1rem 0.6rem 2.5rem; /* Thụt lề cho menu con */
-    font-size: var(--font-size-sm);
+    padding: 0.55rem 0.95rem 0.55rem 2.4rem;
+    font-size: 13px;
     color: #94a3b8;
 }
 
@@ -62,36 +122,52 @@
 }
 
 .sub-menu .nav-item.active {
-    background-color: rgba(59, 130, 246, 0.15);
-    color: var(--primary-color);
-    box-shadow: none;
+    background: rgba(37, 99, 235, 0.15);
+    color: #38bdf8;
+    border-left: 3px solid #38bdf8;
 }
 
-.menu-group-title {
-    padding: 1.25rem 1rem 0.5rem;
-    color: #64748b;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    font-weight: 700;
+.sidebar-footer {
+    padding: 0.85rem 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: #0b1120;
+}
+
+.sidebar-logout-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.65rem 0.95rem;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #f87171;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-logout-btn:hover {
+    background: rgba(239, 68, 68, 0.18);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.35);
+    transform: translateY(-1px);
 }
 
 .main-content {
     flex: 1;
     overflow: hidden;
     background-color: #f8fafc;
-}
-
-.topbar {
-    height: 64px;
-    background-color: white;
-    border-bottom: 1px solid #e2e8f0;
-    padding: 0 var(--space-xl);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    display: flex;
+    flex-direction: column;
 }
 
 .page-content {
     flex: 1;
-    padding: var(--space-xl);
+    padding: 1.25rem 1.5rem;
     overflow-y: auto;
+    background-color: #f8fafc;
 }
