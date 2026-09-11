@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Select from 'react-select';
 import { X, Plus, Trash2 } from 'lucide-react';
 import { useToast } from '../../components/ToastContext';
 import type { Ship, ShipResponse } from '../../types/Ship';
@@ -54,7 +55,7 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
                     const decorated = res.data.map(o => ({
                         ...o,
                         birthDate: getOwnerBirthDate(o.id, o.citizenId, o.birthDate),
-                        phone: o.phone || (o as any).Phone || localStorage.getItem(`owner_phone_${o.id}`) || ''
+                        phone: o.phone || (o as any).Phone || ''
                     }));
                     setOwners(decorated);
                 }
@@ -66,7 +67,6 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
             shipDetailAPI(ship.id)
                 .then((fullShip: any) => {
                     if (fullShip.serial && ship?.id) {
-                        localStorage.setItem(`ship_serial_${ship.id}`, fullShip.serial);
                     }
                     const devSerial = fullShip.deviceSerial || (fullShip.serial ? localStorage.getItem(`ship_device_serial_${fullShip.serial}`) || '' : '');
                     if (devSerial && ship?.id) {
@@ -74,7 +74,6 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
                     }
                     const ownerName = fullShip.shipOwner?.fullName || fullShip.ShipOwner?.fullName || fullShip.shipOwnerName;
                     if (ownerName && ship?.id) {
-                        localStorage.setItem(`ship_owner_name_${ship.id}`, ownerName);
                     }
                     const mappedData: Partial<ShipResponse> = {
                         ...fullShip,
@@ -157,54 +156,57 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
         setFieldErrors({});
         
         // Custom validations có thể thêm ở đây
+        if (!formData.crews || formData.crews.length === 0) {
+            setMainError("Danh sách thuyền viên phải có ít nhất 1 người.");
+            return;
+        }
+
+        const captainRoleIds = crewRolesList
+            .filter(r => (r.code && r.code.toUpperCase() === 'CAPTAIN') || (r.description && r.description.toLowerCase().includes('thuyền trưởng')))
+            .map(r => r.id);
+
+        const hasCaptain = formData.crews.some(crew => crew.idcrewRole && captainRoleIds.includes(crew.idcrewRole));
+        if (!hasCaptain) {
+            setMainError("Danh sách thuyền viên phải có ít nhất 1 người có vai trò Thuyền trưởng.");
+            return;
+        }
+
+        if (Number(formData.dimension1 || 0) <= 0 || Number(formData.dimension2 || 0) <= 0) {
+            setMainError("Kích thước chủ yếu của ngư cụ phải lớn hơn 0.");
+            return;
+        }
         
         setIsLoading(true);
         
         try {
-            const payload = { ...formData };
+            // Cấu trúc payload chuẩn 100% theo swagger.json (AdditionalProperties = false)
+            const strictPayload: any = {
+                name: formData.name || "-",
+                serial: formData.serial || "-",
+                idshipOwner: formData.idshipOwner || "00000000-0000-0000-0000-000000000000",
+                mainOccupationId: formData.mainOccupationId || "00000000-0000-0000-0000-000000000000",
+                lengthOverall: formData.lengthOverall ? Number(formData.lengthOverall) : 0,
+                totalPower: formData.totalPower ? Number(formData.totalPower) : 0,
+                dimension1: formData.dimension1 ? Number(formData.dimension1) : 0,
+                dimension2: formData.dimension2 ? Number(formData.dimension2) : 0,
+            };
+
+            if (formData.secondaryOccupationId1) strictPayload.secondaryOccupationId1 = formData.secondaryOccupationId1;
+            if (formData.secondaryOccupationId2) strictPayload.secondaryOccupationId2 = formData.secondaryOccupationId2;
+            if (formData.miningLicenseNumber) strictPayload.miningLicenseNumber = formData.miningLicenseNumber;
+            if (formData.expirationDateOfMiningLicenseNumber) {
+                strictPayload.expirationDateOfMiningLicenseNumber = parseDDMMYYYYToISO(formData.expirationDateOfMiningLicenseNumber);
+            }
+
+            let fishingGear = formData.fishingGearSpecifications;
+            if (!fishingGear || !fishingGear.trim()) {
+                const mainOccName = occupationsList.find(o => o.id === formData.mainOccupationId)?.name;
+                fishingGear = mainOccName ? `Nghề ${mainOccName}` : "-";
+            }
+            strictPayload.fishingGearSpecifications = fishingGear;
             
-            // Xử lý deviceSerial: Lưu vào localStorage và xóa khỏi payload gửi backend
-            if (payload.deviceSerial) {
-                if (payload.serial) {
-                    localStorage.setItem(`ship_device_serial_${payload.serial}`, payload.deviceSerial);
-                }
-                if (ship?.id) {
-                    localStorage.setItem(`ship_device_serial_${ship.id}`, payload.deviceSerial);
-                }
-            }
-            delete payload.deviceSerial;
 
-            if (payload.serial && !payload.name) {
-                payload.name = payload.serial;
-            }
-            if (payload.name && !payload.serial) {
-                payload.serial = payload.name;
-            }
-
-            // Xử lý FishingGearSpecifications: Backend BẮT BUỘC trường này không được null hoặc rỗng.
-            // Nếu người dùng không nhập, tự động điền theo nghề chính hoặc "-" để không bị lỗi 400
-            if (!payload.fishingGearSpecifications || !payload.fishingGearSpecifications.trim()) {
-                const mainOccName = occupationsList.find(o => o.id === payload.mainOccupationId)?.name;
-                payload.fishingGearSpecifications = mainOccName ? `Nghề ${mainOccName}` : "-";
-            }
-
-            // Đảm bảo các trường số gửi số thay vì chuỗi rỗng
-            payload.dimension1 = payload.dimension1 ? Number(payload.dimension1) : 0;
-            payload.dimension2 = payload.dimension2 ? Number(payload.dimension2) : 0;
-            payload.lengthOverall = payload.lengthOverall ? Number(payload.lengthOverall) : 0;
-            payload.totalPower = payload.totalPower ? Number(payload.totalPower) : 0;
-
-            // Xóa các trường tùy chọn nếu để trống để C# parse thành null
-            if (!payload.secondaryOccupationId1) delete payload.secondaryOccupationId1;
-            if (!payload.secondaryOccupationId2) delete payload.secondaryOccupationId2;
-            if (!payload.miningLicenseNumber) delete payload.miningLicenseNumber;
-            if (payload.expirationDateOfMiningLicenseNumber) {
-                payload.expirationDateOfMiningLicenseNumber = parseDDMMYYYYToISO(payload.expirationDateOfMiningLicenseNumber);
-            } else {
-                delete payload.expirationDateOfMiningLicenseNumber;
-            }
-            
-            // Lưu Ngày sinh các thuyền viên vào cache để không bao giờ bị mất khi backend không lưu hoặc không trả về
+            // Lưu cache ngày sinh thuyền viên
             if (formData.crews) {
                 const shipKey = ship?.id || formData.serial || '';
                 formData.crews.forEach((c: any, idx: number) => {
@@ -220,56 +222,25 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
                 });
             }
 
-            // Dọn dẹp cả bên trong danh sách thuyền viên
-            if (payload.crews) {
-                payload.crews = payload.crews.map((c: any) => {
-                    const cleaned = { ...c };
-                    if (!cleaned.idcrewRole) delete cleaned.idcrewRole;
-                    if (cleaned.birthDate) {
-                        const isoDate = parseDDMMYYYYToISO(cleaned.birthDate);
-                        cleaned.birthDate = isoDate;
-                        cleaned.dateOfBirth = isoDate;
-                    } else {
-                        delete cleaned.birthDate;
-                        delete cleaned.dateOfBirth;
-                    }
-                    return cleaned;
-                });
-            }
+            // Dọn dẹp danh sách thuyền viên chuẩn theo UpdateCrewDto
+            strictPayload.crews = (formData.crews || []).map((c: any) => {
+                const cleanedCrew: any = {
+                    fullName: c.fullName || "",
+                    citizenId: c.citizenId || "",
+                    idcrewRole: c.idcrewRole || "00000000-0000-0000-0000-000000000000"
+                };
+                if (c.id || c.idcrew) cleanedCrew.idcrew = c.id || c.idcrew;
+                if (c.phone) cleanedCrew.phone = c.phone;
+                if (c.email) cleanedCrew.email = c.email;
+                if (c.address) cleanedCrew.address = c.address;
+                // KHÔNG GỬI birthDate hay dateOfBirth vì backend không có trường này trong UpdateCrewDto
+                return cleanedCrew;
+            });
 
-            // Cập nhật lại thông tin Chủ tàu nếu có thay đổi (Ngày sinh, CCCD)
-            if (formData.idshipOwner) {
-                const currentOwnerInState = owners.find(o => o.id === formData.idshipOwner);
-                if (currentOwnerInState) {
-                    saveOwnerBirthDate(currentOwnerInState.id, currentOwnerInState.citizenId, currentOwnerInState.birthDate);
-                    try {
-                        const fullOwner = await shipOwnerDetailAPI(formData.idshipOwner);
-                        const isoBirthDate = parseDDMMYYYYToISO(currentOwnerInState.birthDate);
-                        await updateShipOwnerAPI(formData.idshipOwner, {
-                            ...fullOwner,
-                            citizenId: currentOwnerInState.citizenId || fullOwner.citizenId,
-                            birthDate: isoBirthDate || fullOwner.birthDate,
-                            phone: currentOwnerInState.phone || fullOwner.phone
-                        });
-                        if (currentOwnerInState.phone) {
-                            localStorage.setItem(`owner_phone_${formData.idshipOwner}`, currentOwnerInState.phone);
-                        }
-                    } catch (e) {
-                        console.warn("Không thể cập nhật thông tin chủ tàu", e);
-                    }
-                }
-            }
 
-            if (payload.serial && ship?.id) {
-                localStorage.setItem(`ship_serial_${ship.id}`, payload.serial);
-            }
-            if (formData.idshipOwner && ship?.id) {
-                const ownerObj = owners.find(o => o.id === formData.idshipOwner);
-                if (ownerObj) {
-                    localStorage.setItem(`ship_owner_name_${ship.id}`, ownerObj.fullName);
-                }
-            }
-            await onSubmit(payload);
+
+
+            await onSubmit(strictPayload);
             success(mode === 'create' ? 'Thêm mới tàu thành công!' : 'Cập nhật tàu thành công!');
             onClose();
         } catch (error) {
@@ -358,60 +329,60 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
         // Nghề câu: Chiều dài toàn bộ vàng câu (m); Số lưỡi câu (lưỡi)
         if (name.includes('câu')) {
             return {
-                title: `4. Kích thước chủ yếu của ngư cụ (${occ?.name || 'Nghề câu'})`,
+                title: `3. Kích thước chủ yếu của ngư cụ (${occ?.name || 'Nghề câu'})`,
                 dim1Label: 'Chiều dài toàn bộ vàng câu (m)',
                 dim1Placeholder: 'Nhập chiều dài vàng câu (m)',
                 dim2Label: 'Số lưỡi câu (lưỡi)',
                 dim2Placeholder: 'Nhập số lưỡi câu',
-                notesLabel: 'Quy cách khác (nếu có)',
-                notesPlaceholder: 'Nhập ghi chú quy cách khác...'
+                notesLabel: 'Quy cách ngư cụ',
+                notesPlaceholder: 'Nhập quy cách ngư cụ...'
             };
         }
         // Nghề lưới vây, rê: Chiều dài toàn bộ lưới (m); Chiều cao lưới (m)
         if (name.includes('vây') || name.includes('rê')) {
             return {
-                title: `4. Kích thước chủ yếu của ngư cụ (${occ?.name || 'Lưới vây / Lưới rê'})`,
+                title: `3. Kích thước chủ yếu của ngư cụ (${occ?.name || 'Lưới vây / Lưới rê'})`,
                 dim1Label: 'Chiều dài toàn bộ lưới (m)',
                 dim1Placeholder: 'Nhập chiều dài toàn bộ lưới (m)',
                 dim2Label: 'Chiều cao lưới (m)',
                 dim2Placeholder: 'Nhập chiều cao lưới (m)',
-                notesLabel: 'Quy cách khác (nếu có)',
-                notesPlaceholder: 'Nhập ghi chú quy cách khác...'
+                notesLabel: 'Quy cách ngư cụ',
+                notesPlaceholder: 'Nhập quy cách ngư cụ...'
             };
         }
         // Nghề lưới chụp: Chu vi miệng lưới (m); Chiều cao lưới (m)
         if (name.includes('chụp')) {
             return {
-                title: `4. Kích thước chủ yếu của ngư cụ (${occ?.name || 'Lưới chụp'})`,
+                title: `3. Kích thước chủ yếu của ngư cụ (${occ?.name || 'Lưới chụp'})`,
                 dim1Label: 'Chu vi miệng lưới (m)',
                 dim1Placeholder: 'Nhập chu vi miệng lưới (m)',
                 dim2Label: 'Chiều cao lưới (m)',
                 dim2Placeholder: 'Nhập chiều cao lưới (m)',
-                notesLabel: 'Quy cách khác (nếu có)',
-                notesPlaceholder: 'Nhập ghi chú quy cách khác...'
+                notesLabel: 'Quy cách ngư cụ',
+                notesPlaceholder: 'Nhập quy cách ngư cụ...'
             };
         }
         // Nghề lưới kéo (hoặc cào): Chiều dài giềng phao (m); Chiều dài toàn bộ lưới (m)
         if (name.includes('kéo') || name.includes('cào')) {
             return {
-                title: `4. Kích thước chủ yếu của ngư cụ (${occ?.name || 'Lưới kéo'})`,
+                title: `3. Kích thước chủ yếu của ngư cụ (${occ?.name || 'Lưới kéo'})`,
                 dim1Label: 'Chiều dài giềng phao (m)',
                 dim1Placeholder: 'Nhập chiều dài giềng phao (m)',
                 dim2Label: 'Chiều dài toàn bộ lưới (m)',
                 dim2Placeholder: 'Nhập chiều dài toàn bộ lưới (m)',
-                notesLabel: 'Quy cách khác (nếu có)',
-                notesPlaceholder: 'Nhập ghi chú quy cách khác...'
+                notesLabel: 'Quy cách ngư cụ',
+                notesPlaceholder: 'Nhập quy cách ngư cụ...'
             };
         }
         // Nghề khác / Mặc định
         return {
-            title: occ?.name ? `4. Kích thước chủ yếu của ngư cụ (${occ.name})` : '4. Kích thước chủ yếu của ngư cụ (theo Mục 8 NKKT)',
+            title: occ?.name ? `3. Kích thước chủ yếu của ngư cụ (${occ.name})` : '3. Kích thước chủ yếu của ngư cụ (theo Mục 8 NKKT)',
             dim1Label: 'Kích thước 1 (Chiều dài / Chu vi / Giềng phao...)',
             dim1Placeholder: 'Nhập kích thước 1',
             dim2Label: 'Kích thước 2 (Chiều cao / Số lưỡi / Chiều dài...)',
             dim2Placeholder: 'Nhập kích thước 2',
-            notesLabel: 'Quy cách ngư cụ khác',
-            notesPlaceholder: 'Nhập quy cách ngư cụ khác...'
+            notesLabel: 'Quy cách ngư cụ',
+            notesPlaceholder: 'Nhập quy cách ngư cụ...'
         };
     };
 
@@ -441,10 +412,10 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
                             </div>
                         )}
                         
-                        {/* 1. Thông tin Chủ tàu */}
+                        {/* 1. Thông tin Chung */}
                         <div style={sectionBoxStyle}>
                             <div style={sectionTitleStyle}>
-                                <span>1. Thông tin Chủ tàu</span>
+                                <span>1. Thông tin Tàu & Chủ tàu</span>
                                 {!isReadOnly && formData.idshipOwner && (
                                     <button 
                                         type="button" 
@@ -457,7 +428,7 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
                                                     (r.code && r.code.toUpperCase() === 'CAPTAIN') || 
                                                     (r.description && r.description.toLowerCase().includes('thuyền trưởng'))
                                                 );
-                                                const dob = formatToDDMMYYYY(owner.birthDate) || getOwnerBirthDate(owner.id, owner.citizenId);
+                                                const dob = formatToDDMMYYYY(owner.birthDate);
                                                 const newCrew = {
                                                     fullName: owner.fullName,
                                                     citizenId: owner.citizenId,
@@ -466,12 +437,6 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
                                                     email: (owner as any).email || '',
                                                     idcrewRole: captainRole ? captainRole.id : ''
                                                 };
-                                                saveCrewBirthDate({
-                                                    citizenId: owner.citizenId,
-                                                    fullName: owner.fullName,
-                                                    shipIdentifier: ship?.id || formData.serial,
-                                                    index: (formData.crews || []).length
-                                                }, dob);
                                                 setFormData(prev => ({ ...prev, crews: [...(prev.crews || []), newCrew] }));
                                                 success('Đã thêm chủ tàu vào danh sách thuyền viên với vai trò Thuyền trưởng');
                                             }
@@ -481,7 +446,8 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
                                     </button>
                                 )}
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1.1fr 1.1fr 1.1fr', gap: '16px' }}>
+                            
+                            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.4fr 1.2fr 1fr 1.3fr', gap: '16px' }}>
                                 <div>
                                     <label style={labelStyle}>Họ và tên chủ tàu (*)</label>
                                     {isReadOnly ? (
@@ -492,148 +458,70 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
                                             style={readOnlyStyle}
                                         />
                                     ) : (
-                                        <select 
-                                            className="input" 
-                                            value={formData.idshipOwner || ''} 
-                                            onChange={e => {
-                                                const selectedId = e.target.value;
-                                                setFormData({ ...formData, idshipOwner: selectedId });
-                                                const cur = owners.find(o => o.id === selectedId);
-                                                if (cur) {
-                                                    const dob = getOwnerBirthDate(cur.id, cur.citizenId, cur.birthDate);
-                                                    if (dob && dob !== cur.birthDate) {
-                                                        setOwners(owners.map(o => o.id === selectedId ? { ...o, birthDate: dob } : o));
-                                                    }
-                                                }
+                                        <Select
+                                            placeholder="-- Chọn chủ tàu --"
+                                            value={owners.filter(o => o.id === formData.idshipOwner).map(o => ({ value: o.id, label: `${o.fullName} - ${o.citizenId}` }))[0] || null}
+                                            options={owners.map(o => ({ value: o.id, label: `${o.fullName} - ${o.citizenId}` }))}
+                                            onChange={(selected: any) => {
+                                                setFormData({ ...formData, idshipOwner: selected ? selected.value : '' });
                                             }}
-                                            required
-                                            style={{ ...controlStyle, borderColor: getError('idshipOwner') ? 'var(--error-color)' : '#cbd5e1' }}
-                                        >
-                                            <option value="">-- Chọn chủ tàu --</option>
-                                            {owners.map(owner => (
-                                                <option key={owner.id} value={owner.id}>{owner.fullName} - {owner.citizenId}</option>
-                                            ))}
-                                        </select>
+                                            isClearable
+                                            styles={{
+                                                control: (base) => ({
+                                                    ...base,
+                                                    minHeight: '42px',
+                                                    borderRadius: '8px',
+                                                    borderColor: getError('idshipOwner') ? 'var(--error-color)' : '#cbd5e1',
+                                                    boxShadow: 'none',
+                                                    '&:hover': {
+                                                        borderColor: '#94a3b8'
+                                                    }
+                                                }),
+                                                menu: (base) => ({
+                                                    ...base,
+                                                    zIndex: 9999
+                                                })
+                                            }}
+                                            noOptionsMessage={() => "Không tìm thấy kết quả"}
+                                        />
                                     )}
                                     {getError('idshipOwner') && <span style={{ color: 'var(--error-color)', fontSize: '12px', marginTop: '4px', display: 'block' }}>{getError('idshipOwner')}</span>}
                                 </div>
                                 <div>
-                                    <label style={labelStyle}>Số điện thoại</label>
+                                    <label style={labelStyle}>Tên tàu / Biển số (*)</label>
                                     <input 
-                                        placeholder="Nhập số điện thoại"
-                                        value={owners.find(o => o.id === formData.idshipOwner)?.phone || ''} 
-                                        className="input" 
-                                        onChange={(e) => {
-                                            const newOwners = [...owners];
-                                            const idx = newOwners.findIndex(o => o.id === formData.idshipOwner);
-                                            if (idx >= 0) {
-                                                newOwners[idx].phone = e.target.value;
-                                                setOwners(newOwners);
-                                                if (newOwners[idx].id) {
-                                                    localStorage.setItem(`owner_phone_${newOwners[idx].id}`, e.target.value);
-                                                }
-                                            }
-                                        }}
-                                        readOnly={isReadOnly || !formData.idshipOwner}
-                                        style={(isReadOnly || !formData.idshipOwner) ? readOnlyStyle : controlStyle}
-                                    />
-                                </div>
-                                <div>
-                                    <label style={labelStyle}>Số định danh cá nhân (CCCD)</label>
-                                    <input 
-                                        placeholder="Nhập số CCCD"
-                                        value={owners.find(o => o.id === formData.idshipOwner)?.citizenId || ''} 
-                                        className="input" 
-                                        onChange={(e) => {
-                                            const newOwners = [...owners];
-                                            const idx = newOwners.findIndex(o => o.id === formData.idshipOwner);
-                                            if (idx >= 0) {
-                                                newOwners[idx].citizenId = e.target.value;
-                                                setOwners(newOwners);
-                                                saveOwnerBirthDate(newOwners[idx].id, e.target.value, newOwners[idx].birthDate);
-                                            }
-                                        }}
-                                        readOnly={isReadOnly || !formData.idshipOwner}
-                                        style={(isReadOnly || !formData.idshipOwner) ? readOnlyStyle : controlStyle}
-                                    />
-                                </div>
-                                <div>
-                                    <label style={labelStyle}>Ngày tháng năm sinh</label>
-                                    <input 
-                                        type="text"
-                                        placeholder="dd/MM/yyyy"
-                                        maxLength={10}
-                                        value={owners.find(o => o.id === formData.idshipOwner)?.birthDate || ''} 
-                                        onChange={(e) => {
-                                            const prev = owners.find(o => o.id === formData.idshipOwner)?.birthDate || '';
-                                            const next = handleDateChange(e.target.value, prev);
-                                            const newOwners = [...owners];
-                                            const idx = newOwners.findIndex(o => o.id === formData.idshipOwner);
-                                            if (idx >= 0) {
-                                                newOwners[idx].birthDate = next;
-                                                setOwners(newOwners);
-                                                saveOwnerBirthDate(newOwners[idx].id, newOwners[idx].citizenId, next);
-                                            }
-                                        }}
-                                        onBlur={(e) => {
-                                            const normalized = normalizeDateOnBlur(e.target.value);
-                                            const newOwners = [...owners];
-                                            const idx = newOwners.findIndex(o => o.id === formData.idshipOwner);
-                                            if (idx >= 0) {
-                                                newOwners[idx].birthDate = normalized;
-                                                setOwners(newOwners);
-                                                saveOwnerBirthDate(newOwners[idx].id, newOwners[idx].citizenId, normalized);
-                                            }
-                                        }}
-                                        readOnly={isReadOnly || !formData.idshipOwner}
-                                        style={(isReadOnly || !formData.idshipOwner) ? readOnlyStyle : controlStyle}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* 2. Thông tin Tàu */}
-                        <div style={sectionBoxStyle}>
-                            <div style={sectionTitleStyle}>
-                                <span>2. Thông tin Tàu & Thông số kỹ thuật</span>
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1.2fr 1fr 1.3fr', gap: '16px' }}>
-                                <div>
-                                    <label style={labelStyle}>Số đăng ký / Tên tàu (*)</label>
-                                    <input 
-                                        name="serial"
+                                        name="name"
                                         placeholder="VD: BV-92345-TS"
-                                        value={formData.serial || formData.name || ''} 
-                                        onChange={(e) => {
-                                            const val = e.target.value;
-                                            setFormData(prev => ({
-                                                ...prev,
-                                                serial: val,
-                                                name: val
-                                            }));
-                                        }}
+                                        value={formData.name || ''} 
+                                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                                         className="input" 
                                         required
                                         readOnly={isReadOnly}
-                                        style={isReadOnly ? readOnlyStyle : { ...controlStyle, borderColor: (getError('serial') || getError('name')) ? 'var(--error-color)' : '#cbd5e1' }}
+                                        style={isReadOnly ? readOnlyStyle : { ...controlStyle, borderColor: getError('name') ? 'var(--error-color)' : '#cbd5e1' }}
                                     />
-                                    {(getError('serial') || getError('name')) && (
+                                    {getError('name') && (
                                         <span style={{ color: 'var(--error-color)', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                                            {getError('serial') || getError('name')}
+                                            {getError('name')}
                                         </span>
                                     )}
                                 </div>
                                 <div>
-                                    <label style={labelStyle}>Số Serial thiết bị</label>
+                                    <label style={labelStyle}>Serial thiết bị định vị (*)</label>
                                     <input 
-                                        name="deviceSerial"
+                                        name="serial"
                                         placeholder="VD: 864521039871"
-                                        value={formData.deviceSerial || ''} 
-                                        onChange={handleChange}
+                                        value={formData.serial || ''} 
+                                        onChange={(e) => setFormData(prev => ({ ...prev, serial: e.target.value }))}
                                         className="input" 
+                                        required
                                         readOnly={isReadOnly}
-                                        style={isReadOnly ? readOnlyStyle : controlStyle}
+                                        style={isReadOnly ? readOnlyStyle : { ...controlStyle, borderColor: getError('serial') ? 'var(--error-color)' : '#cbd5e1' }}
                                     />
+                                    {getError('serial') && (
+                                        <span style={{ color: 'var(--error-color)', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                                            {getError('serial')}
+                                        </span>
+                                    )}
                                 </div>
                                 <div>
                                     <label style={labelStyle}>Chiều dài lớn nhất (m)</label>
@@ -664,10 +552,10 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
                             </div>
                         </div>
 
-                        {/* 3. Giấy phép & Nghề nghiệp */}
+                        {/* 2. Giấy phép & Nghề nghiệp */}
                         <div style={sectionBoxStyle}>
                             <div style={sectionTitleStyle}>
-                                <span>3. Giấy phép khai thác & Nghề nghiệp</span>
+                                <span>2. Giấy phép khai thác & Nghề nghiệp</span>
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.95fr 1.45fr 1.25fr 1.25fr', gap: '16px' }}>
                                 <div>
@@ -714,18 +602,32 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
                                             style={readOnlyStyle}
                                         />
                                     ) : (
-                                        <select
-                                            className="input"
-                                            value={formData.mainOccupationId || ''}
-                                            onChange={e => setFormData({ ...formData, mainOccupationId: e.target.value })}
-                                            required
-                                            style={{ ...controlStyle, borderColor: getError('mainOccupationId') ? 'var(--error-color)' : '#cbd5e1' }}
-                                        >
-                                            <option value="">-- Chọn nghề chính --</option>
-                                            {occupationsList.map(occ => (
-                                                <option key={occ.id} value={occ.id}>{occ.name || occ.code}</option>
-                                            ))}
-                                        </select>
+                                        <Select
+                                            placeholder="-- Chọn nghề chính --"
+                                            value={occupationsList.filter(o => o.id === formData.mainOccupationId).map(o => ({ value: o.id, label: o.name || o.code }))[0] || null}
+                                            options={occupationsList.map(o => ({ value: o.id, label: o.name || o.code }))}
+                                            onChange={(selected: any) => {
+                                                setFormData({ ...formData, mainOccupationId: selected ? selected.value : '' });
+                                            }}
+                                            isClearable
+                                            styles={{
+                                                control: (base) => ({
+                                                    ...base,
+                                                    minHeight: '42px',
+                                                    borderRadius: '8px',
+                                                    borderColor: getError('mainOccupationId') ? 'var(--error-color)' : '#cbd5e1',
+                                                    boxShadow: 'none',
+                                                    '&:hover': {
+                                                        borderColor: '#94a3b8'
+                                                    }
+                                                }),
+                                                menu: (base) => ({
+                                                    ...base,
+                                                    zIndex: 9999
+                                                })
+                                            }}
+                                            noOptionsMessage={() => "Không tìm thấy kết quả"}
+                                        />
                                     )}
                                     {getError('mainOccupationId') && <span style={{ color: 'var(--error-color)', fontSize: '12px', marginTop: '4px', display: 'block' }}>{getError('mainOccupationId')}</span>}
                                 </div>
@@ -739,17 +641,32 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
                                             style={readOnlyStyle}
                                         />
                                     ) : (
-                                        <select
-                                            className="input"
-                                            value={formData.secondaryOccupationId1 || ''}
-                                            onChange={e => setFormData({ ...formData, secondaryOccupationId1: e.target.value })}
-                                            style={controlStyle}
-                                        >
-                                            <option value="">-- Chọn nghề phụ 1 --</option>
-                                            {occupationsList.map(occ => (
-                                                <option key={occ.id} value={occ.id}>{occ.name || occ.code}</option>
-                                            ))}
-                                        </select>
+                                        <Select
+                                            placeholder="-- Chọn nghề phụ 1 --"
+                                            value={occupationsList.filter(o => o.id === formData.secondaryOccupationId1).map(o => ({ value: o.id, label: o.name || o.code }))[0] || null}
+                                            options={occupationsList.map(o => ({ value: o.id, label: o.name || o.code }))}
+                                            onChange={(selected: any) => {
+                                                setFormData({ ...formData, secondaryOccupationId1: selected ? selected.value : '' });
+                                            }}
+                                            isClearable
+                                            styles={{
+                                                control: (base) => ({
+                                                    ...base,
+                                                    minHeight: '42px',
+                                                    borderRadius: '8px',
+                                                    borderColor: '#cbd5e1',
+                                                    boxShadow: 'none',
+                                                    '&:hover': {
+                                                        borderColor: '#94a3b8'
+                                                    }
+                                                }),
+                                                menu: (base) => ({
+                                                    ...base,
+                                                    zIndex: 9999
+                                                })
+                                            }}
+                                            noOptionsMessage={() => "Không tìm thấy kết quả"}
+                                        />
                                     )}
                                 </div>
                                 <div>
@@ -762,43 +679,61 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
                                             style={readOnlyStyle}
                                         />
                                     ) : (
-                                        <select
-                                            className="input"
-                                            value={formData.secondaryOccupationId2 || ''}
-                                            onChange={e => setFormData({ ...formData, secondaryOccupationId2: e.target.value })}
-                                            style={controlStyle}
-                                        >
-                                            <option value="">-- Chọn nghề phụ 2 --</option>
-                                            {occupationsList.map(occ => (
-                                                <option key={occ.id} value={occ.id}>{occ.name || occ.code}</option>
-                                            ))}
-                                        </select>
+                                        <Select
+                                            placeholder="-- Chọn nghề phụ 2 --"
+                                            value={occupationsList.filter(o => o.id === formData.secondaryOccupationId2).map(o => ({ value: o.id, label: o.name || o.code }))[0] || null}
+                                            options={occupationsList.map(o => ({ value: o.id, label: o.name || o.code }))}
+                                            onChange={(selected: any) => {
+                                                setFormData({ ...formData, secondaryOccupationId2: selected ? selected.value : '' });
+                                            }}
+                                            isClearable
+                                            styles={{
+                                                control: (base) => ({
+                                                    ...base,
+                                                    minHeight: '42px',
+                                                    borderRadius: '8px',
+                                                    borderColor: '#cbd5e1',
+                                                    boxShadow: 'none',
+                                                    '&:hover': {
+                                                        borderColor: '#94a3b8'
+                                                    }
+                                                }),
+                                                menu: (base) => ({
+                                                    ...base,
+                                                    zIndex: 9999
+                                                })
+                                            }}
+                                            noOptionsMessage={() => "Không tìm thấy kết quả"}
+                                        />
                                     )}
                                 </div>
                             </div>
                         </div>
 
-                        {/* 4. Kích thước chủ yếu của ngư cụ */}
+                        {/* 3. Kích thước chủ yếu của ngư cụ */}
                         <div style={sectionBoxStyle}>
                             <div style={sectionTitleStyle}>
                                 <span>{gearConfig.title}</span>
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2.2fr', gap: '16px' }}>
                                 <div>
-                                    <label style={labelStyle}>{gearConfig.dim1Label}</label>
+                                    <label style={labelStyle}>{gearConfig.dim1Label} (*)</label>
                                     <input 
                                         type="number" 
                                         name="dimension1"
                                         placeholder={gearConfig.dim1Placeholder}
                                         value={formData.dimension1 ?? ''} 
                                         onChange={handleChange}
-                                        className="input" 
+                                        className="input"
+                                        required
+                                        min="0.0001"
+                                        step="any"
                                         readOnly={isReadOnly}
                                         style={isReadOnly ? readOnlyStyle : controlStyle}
                                     />
                                 </div>
                                 <div>
-                                    <label style={labelStyle}>{gearConfig.dim2Label}</label>
+                                    <label style={labelStyle}>{gearConfig.dim2Label} (*)</label>
                                     <input 
                                         type="number" 
                                         name="dimension2"
@@ -806,12 +741,15 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
                                         value={formData.dimension2 ?? ''} 
                                         onChange={handleChange}
                                         className="input" 
+                                        required
+                                        min="0.0001"
+                                        step="any"
                                         readOnly={isReadOnly}
                                         style={isReadOnly ? readOnlyStyle : controlStyle}
                                     />
                                 </div>
                                 <div>
-                                    <label style={labelStyle}>{gearConfig.notesLabel}</label>
+                                    <label style={labelStyle}>{gearConfig.notesLabel} (*)</label>
                                     <input 
                                         type="text" 
                                         name="fishingGearSpecifications"
@@ -819,6 +757,7 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
                                         value={formData.fishingGearSpecifications || ''} 
                                         onChange={handleChange}
                                         className="input" 
+                                        required
                                         readOnly={isReadOnly}
                                         style={isReadOnly ? readOnlyStyle : controlStyle}
                                     />
@@ -829,7 +768,7 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
                         {/* 5. Danh sách thuyền viên */}
                         <div style={sectionBoxStyle}>
                             <div style={sectionTitleStyle}>
-                                <span>5. Danh sách thuyền viên (Thuyền trưởng & Thuyền viên)</span>
+                                <span>4. Danh sách thuyền viên (Thuyền trưởng & Thuyền viên)</span>
                                 {!isReadOnly && (
                                     <button type="button" className="btn btn-primary flex items-center gap-xs" onClick={handleAddCrew} style={{ padding: '4px 10px', fontSize: '13px' }}>
                                         <Plus size={14} /> Thêm thuyền viên
@@ -950,17 +889,33 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
                                                                 {crewRolesList.find(r => r.id === member.idcrewRole)?.description || crewRolesList.find(r => r.id === member.idcrewRole)?.code || '-'}
                                                             </span>
                                                         ) : (
-                                                            <select
-                                                                className="input" 
-                                                                style={{ ...controlStyle, height: '36px', padding: '0.35rem 0.65rem', fontSize: '13.5px' }}
-                                                                value={member.idcrewRole || ''}
-                                                                onChange={e => handleUpdateCrew(idx, 'idcrewRole', e.target.value)}
-                                                            >
-                                                                <option value="">-- Chọn vai trò --</option>
-                                                                {crewRolesList.map(role => (
-                                                                    <option key={role.id} value={role.id}>{role.description || role.code}</option>
-                                                                ))}
-                                                            </select>
+                                                            <Select
+                                                                placeholder="-- Chọn vai trò --"
+                                                                value={crewRolesList.filter(r => r.id === member.idcrewRole).map(r => ({ value: r.id, label: r.description || r.code }))[0] || null}
+                                                                options={crewRolesList.map(r => ({ value: r.id, label: r.description || r.code }))}
+                                                                onChange={(selected: any) => handleUpdateCrew(idx, 'idcrewRole', selected ? selected.value : '')}
+                                                                isClearable
+                                                                styles={{
+                                                                    control: (base) => ({
+                                                                        ...base,
+                                                                        minHeight: '36px',
+                                                                        height: '36px',
+                                                                        borderRadius: '4px',
+                                                                        borderColor: '#cbd5e1',
+                                                                        boxShadow: 'none',
+                                                                        fontSize: '13.5px',
+                                                                        '&:hover': {
+                                                                            borderColor: '#94a3b8'
+                                                                        }
+                                                                    }),
+                                                                    menu: (base) => ({
+                                                                        ...base,
+                                                                        zIndex: 9999,
+                                                                        fontSize: '13.5px'
+                                                                    })
+                                                                }}
+                                                                noOptionsMessage={() => "Không tìm thấy kết quả"}
+                                                            />
                                                         )}
                                                     </td>
                                                     {!isReadOnly && (

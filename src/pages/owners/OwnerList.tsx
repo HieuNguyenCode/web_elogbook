@@ -42,8 +42,8 @@ export default function OwnerList() {
             // Khởi tạo danh sách kết hợp với cache nếu có
             const initialized = rawList.map(o => ({
                 ...o,
-                phone: o.phone || (o as any).Phone || localStorage.getItem(`owner_phone_${o.id}`) || undefined,
-                address: o.address || (o as any).Address || localStorage.getItem(`owner_address_${o.id}`) || undefined,
+                phone: o.phone || (o as any).Phone || undefined,
+                address: o.address || (o as any).Address || undefined,
             }));
             setOwners(initialized);
             setTotalPages(response.totalPages || 1);
@@ -57,8 +57,6 @@ export default function OwnerList() {
                         try {
                             const detail = await shipOwnerDetailAPI(o.id);
                             if (detail) {
-                                if (detail.phone) localStorage.setItem(`owner_phone_${o.id}`, detail.phone);
-                                if (detail.address) localStorage.setItem(`owner_address_${o.id}`, detail.address);
                                 return { id: o.id, phone: detail.phone, address: detail.address };
                             }
                         } catch (e) {}
@@ -75,13 +73,7 @@ export default function OwnerList() {
                                     address: o.address || match.value.address
                                 };
                             }
-                            const cachedPhone = localStorage.getItem(`owner_phone_${o.id}`);
-                            const cachedAddr = localStorage.getItem(`owner_address_${o.id}`);
-                            return {
-                                ...o,
-                                phone: o.phone || cachedPhone || undefined,
-                                address: o.address || cachedAddr || undefined
-                            };
+                            return o;
                         })
                     );
                 });
@@ -120,8 +112,6 @@ export default function OwnerList() {
                 setPage(1);
             } else if (modalMode === 'edit' && selectedOwner) {
                 await updateShipOwnerAPI(selectedOwner.id, payload);
-                if (payload.phone) localStorage.setItem(`owner_phone_${selectedOwner.id}`, payload.phone);
-                if (payload.address) localStorage.setItem(`owner_address_${selectedOwner.id}`, payload.address);
                 success('Cập nhật thông tin thành công!');
             }
             fetchOwners(search, page); // Tải lại trang hiện tại
@@ -238,8 +228,8 @@ export default function OwnerList() {
                                 </tr>
                             ) : (
                                 owners.map((owner, index) => {
-                                    const phoneVal = owner.phone || (owner as any).Phone || localStorage.getItem(`owner_phone_${owner.id}`);
-                                    const addressVal = owner.address || (owner as any).Address || localStorage.getItem(`owner_address_${owner.id}`);
+                                    const phoneVal = owner.phone || (owner as any).Phone;
+                                    const addressVal = owner.address || (owner as any).Address;
                                     return (
                                         <tr key={owner.id}>
                                             <td className="text-center" style={{ color: '#64748b', fontSize: '13px', fontWeight: 500 }}>

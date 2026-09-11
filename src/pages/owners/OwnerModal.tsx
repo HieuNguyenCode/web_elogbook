@@ -1,9 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
-import type { ShipOwner, ShipOwnerPayload } from '../../types/ShipOwner';
-import type { ServiceResponse } from '../../types/api';
-import { shipOwnerDetailAPI } from '../../features/API/shipOwner/ShipOwner.ts';
-import { parseDDMMYYYYToISO, handleDateChange, normalizeDateOnBlur, saveOwnerBirthDate, getOwnerBirthDate } from '../../utils/dateUtils.ts';
+import React, {useEffect, useState} from 'react';
+import {X} from 'lucide-react';
+import type {ShipOwner, ShipOwnerPayload} from '../../types/ShipOwner';
+import type {ServiceResponse} from '../../types/api';
+import {shipOwnerDetailAPI} from '../../features/API/shipOwner/ShipOwner.ts';
+import {
+    getOwnerBirthDate,
+    handleDateChange,
+    normalizeDateOnBlur,
+    parseDDMMYYYYToISO,
+    saveOwnerBirthDate
+} from '../../utils/dateUtils.ts';
 
 type ModalMode = 'view' | 'create' | 'edit';
 
@@ -15,7 +21,7 @@ interface OwnerModalProps {
     onSubmit: (payload: ShipOwnerPayload) => Promise<void>;
 }
 
-export default function OwnerModal({ isOpen, mode, owner, onClose, onSubmit }: OwnerModalProps) {
+export default function OwnerModal({isOpen, mode, owner, onClose, onSubmit}: OwnerModalProps) {
     const [formData, setFormData] = useState<Partial<ShipOwnerPayload>>({
         fullName: '',
         citizenId: '',
@@ -24,7 +30,7 @@ export default function OwnerModal({ isOpen, mode, owner, onClose, onSubmit }: O
         address: '',
         birthDate: ''
     });
-    
+
     const [isLoading, setIsLoading] = useState(false);
     const [isFetchingDetail, setIsFetchingDetail] = useState(false);
     const [mainError, setMainError] = useState<string | null>(null);
@@ -36,8 +42,6 @@ export default function OwnerModal({ isOpen, mode, owner, onClose, onSubmit }: O
             shipOwnerDetailAPI(owner.id)
                 .then(fullOwner => {
                     const dob = getOwnerBirthDate(owner.id, fullOwner.citizenId || owner.citizenId, fullOwner.birthDate);
-                    if (fullOwner.phone) localStorage.setItem(`owner_phone_${owner.id}`, fullOwner.phone);
-                    if (fullOwner.address) localStorage.setItem(`owner_address_${owner.id}`, fullOwner.address);
                     setFormData({
                         fullName: fullOwner.fullName || '',
                         citizenId: fullOwner.citizenId || '',
@@ -54,9 +58,9 @@ export default function OwnerModal({ isOpen, mode, owner, onClose, onSubmit }: O
                     setIsFetchingDetail(false);
                 });
         } else if (isOpen && mode === 'create') {
-            setFormData({ fullName: '', citizenId: '', phone: '', email: '', address: '', birthDate: '' });
+            setFormData({fullName: '', citizenId: '', phone: '', email: '', address: '', birthDate: ''});
         }
-        
+
         // Reset errors when modal opens
         setMainError(null);
         setFieldErrors({});
@@ -67,27 +71,23 @@ export default function OwnerModal({ isOpen, mode, owner, onClose, onSubmit }: O
     const isReadOnly = mode === 'view';
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        setFormData({...formData, [e.target.name]: e.target.value});
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (isReadOnly) return;
-        
+
         setMainError(null);
         setFieldErrors({});
         setIsLoading(true);
-        
+
         try {
             // Lưu Ngày sinh, số điện thoại, địa chỉ vào cache
             saveOwnerBirthDate(owner?.id, formData.citizenId, formData.birthDate);
-            if (owner?.id) {
-                if (formData.phone) localStorage.setItem(`owner_phone_${owner.id}`, formData.phone);
-                if (formData.address) localStorage.setItem(`owner_address_${owner.id}`, formData.address);
-            }
 
             // Chuẩn hóa dữ liệu trước khi gửi (VD: chuỗi rỗng thì chuyển thành undefined để Backend không bị lỗi parse Date)
-            const payload = { ...formData };
+            const payload = {...formData};
             if (payload.birthDate) {
                 payload.birthDate = parseDDMMYYYYToISO(payload.birthDate);
             } else {
@@ -96,7 +96,7 @@ export default function OwnerModal({ isOpen, mode, owner, onClose, onSubmit }: O
             if (!payload.phone) payload.phone = undefined;
             if (!payload.email) payload.email = undefined;
             if (!payload.address) payload.address = undefined;
-            
+
             await onSubmit(payload as ShipOwnerPayload);
             onClose();
         } catch (error) {
@@ -130,100 +130,170 @@ export default function OwnerModal({ isOpen, mode, owner, onClose, onSubmit }: O
                 <div className="modal-header">
                     <h3 className="modal-title">{titleMap[mode]}</h3>
                     <button className="modal-close-btn" onClick={onClose}>
-                        <X size={20} />
+                        <X size={20}/>
                     </button>
                 </div>
-                
+
                 {mainError && (
-                    <div style={{ backgroundColor: 'var(--error-bg)', color: 'var(--error-color)', padding: 'var(--space-sm) var(--space-md)', fontSize: '14px', borderBottom: '1px solid #fecaca' }}>
+                    <div style={{
+                        backgroundColor: 'var(--error-bg)',
+                        color: 'var(--error-color)',
+                        padding: 'var(--space-sm) var(--space-md)',
+                        fontSize: '14px',
+                        borderBottom: '1px solid #fecaca'
+                    }}>
                         {mainError}
                     </div>
                 )}
-                
+
                 <form onSubmit={handleSubmit}>
-                    <div className="modal-body flex flex-col gap-md" style={{ position: 'relative' }}>
+                    <div className="modal-body flex flex-col gap-md" style={{position: 'relative'}}>
                         {isFetchingDetail && (
-                            <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(255,255,255,0.7)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{
+                                position: 'absolute',
+                                inset: 0,
+                                backgroundColor: 'rgba(255,255,255,0.7)',
+                                zIndex: 10,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}>
                                 <span className="text-muted">Đang tải dữ liệu...</span>
                             </div>
                         )}
                         <div>
-                            <label className="form-label" style={{ display: 'block', fontSize: '14px', marginBottom: '4px', fontWeight: 500 }}>Họ và tên (*)</label>
-                            <input 
+                            <label className="form-label"
+                                   style={{display: 'block', fontSize: '14px', marginBottom: '4px', fontWeight: 500}}>Họ
+                                và tên (*)</label>
+                            <input
                                 name="fullName"
-                                value={formData.fullName} 
+                                value={formData.fullName}
                                 onChange={handleChange}
                                 className={`input ${getError('fullName') ? 'border-red-500' : ''}`}
                                 required
                                 readOnly={isReadOnly}
-                                style={{ backgroundColor: isReadOnly ? '#f1f5f9' : 'white', borderColor: getError('fullName') ? 'var(--error-color)' : undefined }}
+                                style={{
+                                    backgroundColor: isReadOnly ? '#f1f5f9' : 'white',
+                                    borderColor: getError('fullName') ? 'var(--error-color)' : undefined
+                                }}
                             />
-                            {getError('fullName') && <span style={{ color: 'var(--error-color)', fontSize: '12px', marginTop: '4px', display: 'block' }}>{getError('fullName')}</span>}
+                            {getError('fullName') && <span style={{
+                                color: 'var(--error-color)',
+                                fontSize: '12px',
+                                marginTop: '4px',
+                                display: 'block'
+                            }}>{getError('fullName')}</span>}
                         </div>
                         <div>
-                            <label className="form-label" style={{ display: 'block', fontSize: '14px', marginBottom: '4px', fontWeight: 500 }}>CCCD / CMND (*)</label>
-                            <input 
+                            <label className="form-label"
+                                   style={{display: 'block', fontSize: '14px', marginBottom: '4px', fontWeight: 500}}>CCCD
+                                / CMND (*)</label>
+                            <input
                                 name="citizenId"
-                                value={formData.citizenId} 
+                                value={formData.citizenId}
                                 onChange={handleChange}
-                                className="input" 
+                                className="input"
                                 required
                                 readOnly={isReadOnly}
-                                style={{ backgroundColor: isReadOnly ? '#f1f5f9' : 'white', borderColor: getError('citizenId') ? 'var(--error-color)' : undefined }}
+                                style={{
+                                    backgroundColor: isReadOnly ? '#f1f5f9' : 'white',
+                                    borderColor: getError('citizenId') ? 'var(--error-color)' : undefined
+                                }}
                             />
-                            {getError('citizenId') && <span style={{ color: 'var(--error-color)', fontSize: '12px', marginTop: '4px', display: 'block' }}>{getError('citizenId')}</span>}
+                            {getError('citizenId') && <span style={{
+                                color: 'var(--error-color)',
+                                fontSize: '12px',
+                                marginTop: '4px',
+                                display: 'block'
+                            }}>{getError('citizenId')}</span>}
                         </div>
                         <div className="flex gap-sm">
                             <div className="flex-1">
-                                <label className="form-label" style={{ display: 'block', fontSize: '14px', marginBottom: '4px', fontWeight: 500 }}>Số điện thoại</label>
-                                <input 
+                                <label className="form-label" style={{
+                                    display: 'block',
+                                    fontSize: '14px',
+                                    marginBottom: '4px',
+                                    fontWeight: 500
+                                }}>Số điện thoại</label>
+                                <input
                                     name="phone"
-                                    value={formData.phone} 
+                                    value={formData.phone}
                                     onChange={handleChange}
                                     className="input"
                                     readOnly={isReadOnly}
-                                    style={{ backgroundColor: isReadOnly ? '#f1f5f9' : 'white', borderColor: getError('phone') ? 'var(--error-color)' : undefined }}
+                                    style={{
+                                        backgroundColor: isReadOnly ? '#f1f5f9' : 'white',
+                                        borderColor: getError('phone') ? 'var(--error-color)' : undefined
+                                    }}
                                 />
-                                {getError('phone') && <span style={{ color: 'var(--error-color)', fontSize: '12px', marginTop: '4px', display: 'block' }}>{getError('phone')}</span>}
+                                {getError('phone') && <span style={{
+                                    color: 'var(--error-color)',
+                                    fontSize: '12px',
+                                    marginTop: '4px',
+                                    display: 'block'
+                                }}>{getError('phone')}</span>}
                             </div>
                             <div className="flex-1">
-                                <label className="form-label" style={{ display: 'block', fontSize: '14px', marginBottom: '4px', fontWeight: 500 }}>Ngày sinh</label>
-                                <input 
+                                <label className="form-label" style={{
+                                    display: 'block',
+                                    fontSize: '14px',
+                                    marginBottom: '4px',
+                                    fontWeight: 500
+                                }}>Ngày sinh</label>
+                                <input
                                     type="text"
                                     name="birthDate"
                                     placeholder="dd/MM/yyyy"
                                     maxLength={10}
-                                    value={formData.birthDate || ''} 
+                                    value={formData.birthDate || ''}
                                     onChange={(e) => {
                                         const next = handleDateChange(e.target.value, formData.birthDate || '');
-                                        setFormData({ ...formData, birthDate: next });
+                                        setFormData({...formData, birthDate: next});
                                     }}
                                     onBlur={(e) => {
                                         const normalized = normalizeDateOnBlur(e.target.value);
-                                        setFormData({ ...formData, birthDate: normalized });
+                                        setFormData({...formData, birthDate: normalized});
                                     }}
                                     className="input"
                                     readOnly={isReadOnly}
-                                    style={{ backgroundColor: isReadOnly ? '#f1f5f9' : 'white', borderColor: getError('birthDate') ? 'var(--error-color)' : undefined }}
+                                    style={{
+                                        backgroundColor: isReadOnly ? '#f1f5f9' : 'white',
+                                        borderColor: getError('birthDate') ? 'var(--error-color)' : undefined
+                                    }}
                                 />
-                                {getError('birthDate') && <span style={{ color: 'var(--error-color)', fontSize: '12px', marginTop: '4px', display: 'block' }}>{getError('birthDate')}</span>}
+                                {getError('birthDate') && <span style={{
+                                    color: 'var(--error-color)',
+                                    fontSize: '12px',
+                                    marginTop: '4px',
+                                    display: 'block'
+                                }}>{getError('birthDate')}</span>}
                             </div>
                         </div>
 
                         <div>
-                            <label className="form-label" style={{ display: 'block', fontSize: '14px', marginBottom: '4px', fontWeight: 500 }}>Địa chỉ</label>
-                            <input 
+                            <label className="form-label"
+                                   style={{display: 'block', fontSize: '14px', marginBottom: '4px', fontWeight: 500}}>Địa
+                                chỉ</label>
+                            <input
                                 name="address"
-                                value={formData.address} 
+                                value={formData.address}
                                 onChange={handleChange}
-                                className="input" 
+                                className="input"
                                 readOnly={isReadOnly}
-                                style={{ backgroundColor: isReadOnly ? '#f1f5f9' : 'white', borderColor: getError('address') ? 'var(--error-color)' : undefined }}
+                                style={{
+                                    backgroundColor: isReadOnly ? '#f1f5f9' : 'white',
+                                    borderColor: getError('address') ? 'var(--error-color)' : undefined
+                                }}
                             />
-                            {getError('address') && <span style={{ color: 'var(--error-color)', fontSize: '12px', marginTop: '4px', display: 'block' }}>{getError('address')}</span>}
+                            {getError('address') && <span style={{
+                                color: 'var(--error-color)',
+                                fontSize: '12px',
+                                marginTop: '4px',
+                                display: 'block'
+                            }}>{getError('address')}</span>}
                         </div>
                     </div>
-                    
+
                     <div className="modal-footer">
                         <button type="button" className="btn btn-outline" onClick={onClose}>
                             Đóng

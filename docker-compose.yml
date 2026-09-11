@@ -1,0 +1,15 @@
+services:
+  web-e-long-book:
+    build: .
+    container_name: web-e-long-book
+    ports:
+      - "44446:44445"
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - web_net
+
+networks:
+  web_net:
+    driver: bridge

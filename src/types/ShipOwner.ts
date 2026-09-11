@@ -12,6 +12,5 @@ export interface ShipOwner {
     birthDate?: string;
     phone?: string;
     address?: string;
-    email?: string;
-    [key: string]: any;
+    email?: string
 }

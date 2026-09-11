@@ -126,12 +126,7 @@ export const saveOwnerBirthDate = (ownerId?: string | null, citizenId?: string |
     if (!birthDate) return;
     const clean = formatToDDMMYYYY(birthDate);
     if (!clean) return;
-    if (ownerId) {
-        localStorage.setItem(`owner_dob_id_${ownerId}`, clean);
-    }
-    if (citizenId) {
-        localStorage.setItem(`owner_dob_cid_${citizenId}`, clean);
-    }
+
 };
 
 // Helper lấy Ngày sinh của Chủ tàu từ API hoặc localStorage cache
@@ -143,14 +138,6 @@ export const getOwnerBirthDate = (ownerId?: string | null, citizenId?: string | 
             saveOwnerBirthDate(ownerId, citizenId, formatted);
             return formatted;
         }
-    }
-    if (ownerId) {
-        const cached = localStorage.getItem(`owner_dob_id_${ownerId}`);
-        if (cached) return cached;
-    }
-    if (citizenId) {
-        const cached = localStorage.getItem(`owner_dob_cid_${citizenId}`);
-        if (cached) return cached;
     }
     return '';
 };
@@ -172,7 +159,6 @@ export const saveCrewBirthDate = (identifier: CrewCacheIdentifier, birthDate?: s
     if (identifier.citizenId && identifier.citizenId.trim()) {
         const cid = identifier.citizenId.trim();
         localStorage.setItem(`crew_dob_cid_${cid}`, clean);
-        localStorage.setItem(`owner_dob_cid_${cid}`, clean);
     }
     if (identifier.id && identifier.id.trim()) {
         localStorage.setItem(`crew_dob_id_${identifier.id.trim()}`, clean);
@@ -207,7 +193,7 @@ export const getCrewBirthDate = (identifier: CrewCacheIdentifier, apiBirthDate?:
     // 2. Tìm theo CCCD
     if (identifier.citizenId && identifier.citizenId.trim()) {
         const cid = identifier.citizenId.trim();
-        const cachedCid = localStorage.getItem(`crew_dob_cid_${cid}`) || localStorage.getItem(`owner_dob_cid_${cid}`);
+        const cachedCid = localStorage.getItem(`crew_dob_cid_${cid}`) ;
         if (cachedCid) return cachedCid;
     }
 

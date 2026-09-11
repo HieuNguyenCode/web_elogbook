@@ -51,15 +51,9 @@ export default function ShipList() {
             
             // Khởi tạo danh sách tàu ngay lập tức, kết hợp với các dữ liệu đã lưu trong cache
             const initialized = fetched.map(s => {
-                const cachedSerial = localStorage.getItem(`ship_serial_${s.id}`);
-                const shipSerial = s.serial || cachedSerial || undefined;
-                const cachedDevSerial = localStorage.getItem(`ship_device_serial_${s.id}`) || (shipSerial ? localStorage.getItem(`ship_device_serial_${shipSerial}`) : null);
-                const cachedOwner = localStorage.getItem(`ship_owner_name_${s.id}`);
                 return {
                     ...s,
-                    serial: shipSerial,
-                    deviceSerial: s.deviceSerial || (s as any).DeviceSerial || cachedDevSerial || undefined,
-                    ownerName: (s as any).shipOwner?.fullName || (s as any).ShipOwner?.fullName || (s as any).shipOwnerName || cachedOwner || undefined
+                    ownerName: (s as any).shipOwner?.fullName || (s as any).ShipOwner?.fullName || (s as any).shipOwnerName || undefined
                 };
             });
             setShips(initialized);
@@ -73,17 +67,8 @@ export default function ShipList() {
                         const detail: any = await shipDetailAPI(s.id);
                         if (detail) {
                             const shipSerial = detail.serial || '';
-                            if (shipSerial) {
-                                localStorage.setItem(`ship_serial_${s.id}`, shipSerial);
-                            }
-                            const devSerial = detail.deviceSerial || (shipSerial ? localStorage.getItem(`ship_device_serial_${shipSerial}`) : '') || '';
-                            if (devSerial) {
-                                localStorage.setItem(`ship_device_serial_${s.id}`, devSerial);
-                            }
+                            const devSerial = detail.deviceSerial || '';
                             const ownerName = detail.shipOwner?.fullName || detail.ShipOwner?.fullName || detail.shipOwnerName || '';
-                            if (ownerName) {
-                                localStorage.setItem(`ship_owner_name_${s.id}`, ownerName);
-                            }
                             return {
                                 id: s.id,
                                 serial: shipSerial,
@@ -146,7 +131,6 @@ export default function ShipList() {
             } else if (modalMode === 'edit' && selectedShip) {
                 await updateShipAPI(selectedShip.id, payload);
                 if (payload.serial) {
-                    localStorage.setItem(`ship_serial_${selectedShip.id}`, payload.serial);
                 }
                 if (payload.deviceSerial) {
                     localStorage.setItem(`ship_device_serial_${selectedShip.id}`, payload.deviceSerial);
@@ -157,7 +141,6 @@ export default function ShipList() {
                 if (payload.idshipOwner) {
                     const ownerObj = ownersList.find(o => o.id === payload.idshipOwner);
                     if (ownerObj) {
-                        localStorage.setItem(`ship_owner_name_${selectedShip.id}`, ownerObj.fullName);
                     }
                 }
             }
@@ -249,17 +232,17 @@ export default function ShipList() {
                         <thead>
                             <tr>
                                 <th style={{ width: '60px', textAlign: 'center' }}>STT</th>
-                                <th style={{ minWidth: '200px' }}>Tên tàu</th>
-                                <th style={{ minWidth: '150px' }}>Số Serial</th>
+                                <th style={{ minWidth: '200px' }}>Tên tàu / Biển số</th>
+                                <th style={{ minWidth: '150px' }}>Serial Thiết bị</th>
                                 <th style={{ minWidth: '180px' }}>Chủ tàu</th>
-                                <th style={{ minWidth: '260px' }}>Mã ID</th>
+
                                 <th style={{ width: '130px', textAlign: 'center' }}>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={6} className="text-center text-muted" style={{ padding: '3.5rem' }}>
+                                    <td colSpan={5} className="text-center text-muted" style={{ padding: '3.5rem' }}>
                                         <div className="flex flex-col items-center justify-center gap-sm">
                                             <div style={{ width: '28px', height: '28px', border: '3px solid #e2e8f0', borderTopColor: 'var(--primary-color)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                                             <span>Đang tải danh sách tàu...</span>
@@ -268,15 +251,13 @@ export default function ShipList() {
                                 </tr>
                             ) : ships.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="text-center text-muted" style={{ padding: '3.5rem' }}>
+                                    <td colSpan={5} className="text-center text-muted" style={{ padding: '3.5rem' }}>
                                         {search ? 'Không tìm thấy kết quả phù hợp với từ khóa.' : 'Chưa có dữ liệu tàu nào.'}
                                     </td>
                                 </tr>
                             ) : (
                                 ships.map((ship, index) => {
-                                    const shipSerialVal = ship.serial || (ship as any).Serial || (ship as any).shipSerial || localStorage.getItem(`ship_serial_${ship.id}`);
-                                    const devSerialVal = ship.deviceSerial || (ship as any).DeviceSerial || localStorage.getItem(`ship_device_serial_${ship.id}`) || (shipSerialVal ? localStorage.getItem(`ship_device_serial_${shipSerialVal}`) : null);
-                                    const ownerVal = ship.ownerName || (ship as any).shipOwner?.fullName || (ship as any).ShipOwner?.fullName || (ship as any).shipOwnerName || localStorage.getItem(`ship_owner_name_${ship.id}`) || (ship.idshipOwner ? ownersList.find(o => o.id === ship.idshipOwner)?.fullName : undefined);
+                                    const ownerVal = ship.ownerName || (ship as any).shipOwner?.fullName || (ship.idshipOwner ? ownersList.find(o => o.id === ship.idshipOwner)?.fullName : undefined);
                                     return (
                                         <tr key={ship.id}>
                                             <td className="text-center" style={{ color: '#64748b', fontSize: '13px', fontWeight: 500 }}>
@@ -289,20 +270,15 @@ export default function ShipList() {
                                                     </div>
                                                     <div>
                                                         <span className="font-semibold" style={{ color: '#0f172a', fontSize: '14.5px' }}>
-                                                            {ship.name}
+                                                            {ship.name || 'Chưa có tên'}
                                                         </span>
-                                                        {shipSerialVal && shipSerialVal !== ship.name && (
-                                                            <span style={{ fontSize: '12px', color: '#64748b', display: 'block', marginTop: '1px' }}>
-                                                                Số hiệu: {shipSerialVal}
-                                                            </span>
-                                                        )}
                                                     </div>
                                                 </div>
                                             </td>
                                             <td>
-                                                {devSerialVal ? (
+                                                {ship.serial ? (
                                                     <span className="material-chip chip-blue" style={{ fontWeight: 600 }}>
-                                                        {devSerialVal}
+                                                        {ship.serial}
                                                     </span>
                                                 ) : (
                                                     <span className="text-muted" style={{ fontStyle: 'italic', fontSize: '13px' }}>
@@ -321,11 +297,7 @@ export default function ShipList() {
                                                     </span>
                                                 )}
                                             </td>
-                                            <td>
-                                                <span className="material-chip chip-gray" style={{ fontSize: '12.5px', letterSpacing: '0.02em', wordBreak: 'break-all' }}>
-                                                    {ship.id}
-                                                </span>
-                                            </td>
+
                                             <td>
                                                 <div className="flex items-center justify-center gap-xs">
                                                     <button 
