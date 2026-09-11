@@ -15,8 +15,8 @@ COPY . .
 # Build ứng dụng
 RUN npm run build
 
-# Mở cổng 44445
-EXPOSE 44445
+# Mở cổng 44446
+EXPOSE 44446
 
-# Khởi chạy server preview của Vite trực tiếp trên cổng 44445
-CMD ["npm", "run", "preview", "--", "--port", "44445", "--host", "0.0.0.0"]
+# Khởi chạy server preview của Vite trực tiếp trên cổng 44446
+CMD ["npm", "run", "preview", "--", "--port", "44446", "--host", "0.0.0.0"]

@@ -8,8 +8,8 @@ import type { ShipOwner } from '../../types/ShipOwner';
 import type { ServiceResponse } from '../../types/api';
 import { shipDetailAPI } from '../../features/API/ship/Ship.ts';
 import { crewRolesAPI, occupationsAPI } from '../../features/API/catalog/Catalog.ts';
-import { listShipOwnerAPI, shipOwnerDetailAPI, updateShipOwnerAPI } from '../../features/API/shipOwner/ShipOwner.ts';
-import { formatToDDMMYYYY, parseDDMMYYYYToISO, handleDateChange, normalizeDateOnBlur, saveOwnerBirthDate, getOwnerBirthDate, saveCrewBirthDate, getCrewBirthDate } from '../../utils/dateUtils.ts';
+import { listShipOwnerAPI, } from '../../features/API/shipOwner/ShipOwner.ts';
+import { formatToDDMMYYYY, parseDDMMYYYYToISO, handleDateChange, normalizeDateOnBlur, getOwnerBirthDate, saveCrewBirthDate, getCrewBirthDate } from '../../utils/dateUtils.ts';
 
 type ModalMode = 'view' | 'create' | 'edit';
 

@@ -122,7 +122,7 @@ export const maskDDMMYYYY = (inputVal: string): string => {
 };
 
 // Helper lưu cache Ngày sinh của Chủ tàu vào localStorage để không bao giờ bị mất
-export const saveOwnerBirthDate = (ownerId?: string | null, citizenId?: string | null, birthDate?: string | null) => {
+export const saveOwnerBirthDate = (_ownerId?: string | null, _citizenId?: string | null, birthDate?: string | null) => {
     if (!birthDate) return;
     const clean = formatToDDMMYYYY(birthDate);
     if (!clean) return;

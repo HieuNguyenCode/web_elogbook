@@ -3,7 +3,7 @@ services:
     build: .
     container_name: web-e-long-book
     ports:
-      - "44446:44445"
+      - "44446:44446"
     env_file:
       - .env
     restart: unless-stopped
