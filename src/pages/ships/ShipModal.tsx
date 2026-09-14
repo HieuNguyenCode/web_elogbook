@@ -8,7 +8,7 @@ import type { ShipOwner } from '../../types/ShipOwner';
 import type { ServiceResponse } from '../../types/api';
 import { shipDetailAPI } from '../../features/API/ship/Ship.ts';
 import { crewRolesAPI, occupationsAPI } from '../../features/API/catalog/Catalog.ts';
-import { listShipOwnerAPI, } from '../../features/API/shipOwner/ShipOwner.ts';
+import { listShipOwnerAPI, shipOwnerDetailAPI } from '../../features/API/shipOwner/ShipOwner.ts';
 import { formatToDDMMYYYY, parseDDMMYYYYToISO, handleDateChange, normalizeDateOnBlur, getOwnerBirthDate, saveCrewBirthDate, getCrewBirthDate } from '../../utils/dateUtils.ts';
 
 type ModalMode = 'view' | 'create' | 'edit';
@@ -81,6 +81,7 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
                         secondaryOccupationId1: fullShip.secondaryOccupationId1 || fullShip.secondaryOccupation1?.id || fullShip.SecondaryOccupation1?.id || '',
                         secondaryOccupationId2: fullShip.secondaryOccupationId2 || fullShip.secondaryOccupation2?.id || fullShip.SecondaryOccupation2?.id || '',
                         idshipOwner: fullShip.idshipOwner || fullShip.shipOwner?.id || fullShip.ShipOwner?.id || '',
+                        installationDate: formatToDDMMYYYY(fullShip.installationDate),
                         expirationDateOfMiningLicenseNumber: formatToDDMMYYYY(fullShip.expirationDateOfMiningLicenseNumber),
                         crews: (fullShip.crews || fullShip.crew || []).map((c: any, idx: number) => {
                             const shipKey = fullShip.id || ship.id || fullShip.serial || '';
@@ -193,6 +194,9 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
 
             if (formData.secondaryOccupationId1) strictPayload.secondaryOccupationId1 = formData.secondaryOccupationId1;
             if (formData.secondaryOccupationId2) strictPayload.secondaryOccupationId2 = formData.secondaryOccupationId2;
+            if (formData.installationDate) {
+                strictPayload.installationDate = parseDDMMYYYYToISO(formData.installationDate);
+            }
             if (formData.miningLicenseNumber) strictPayload.miningLicenseNumber = formData.miningLicenseNumber;
             if (formData.expirationDateOfMiningLicenseNumber) {
                 strictPayload.expirationDateOfMiningLicenseNumber = parseDDMMYYYYToISO(formData.expirationDateOfMiningLicenseNumber);
@@ -421,24 +425,29 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
                                         type="button" 
                                         className="btn btn-primary" 
                                         style={{ padding: '3px 10px', fontSize: '12px' }}
-                                        onClick={() => {
+                                        onClick={async () => {
                                             const owner = owners.find(o => o.id === formData.idshipOwner);
                                             if (owner) {
-                                                const captainRole = crewRolesList.find(r => 
-                                                    (r.code && r.code.toUpperCase() === 'CAPTAIN') || 
-                                                    (r.description && r.description.toLowerCase().includes('thuyền trưởng'))
-                                                );
-                                                const dob = formatToDDMMYYYY(owner.birthDate);
-                                                const newCrew = {
-                                                    fullName: owner.fullName,
-                                                    citizenId: owner.citizenId,
-                                                    birthDate: dob,
-                                                    phone: (owner as any).phone || '',
-                                                    email: (owner as any).email || '',
-                                                    idcrewRole: captainRole ? captainRole.id : ''
-                                                };
-                                                setFormData(prev => ({ ...prev, crews: [...(prev.crews || []), newCrew] }));
-                                                success('Đã thêm chủ tàu vào danh sách thuyền viên với vai trò Thuyền trưởng');
+                                                try {
+                                                    const ownerDetail = await shipOwnerDetailAPI(owner.id);
+                                                    const captainRole = crewRolesList.find(r => 
+                                                        (r.code && r.code.toUpperCase() === 'CAPTAIN') || 
+                                                        (r.description && r.description.toLowerCase().includes('thuyền trưởng'))
+                                                    );
+                                                    const dob = formatToDDMMYYYY(ownerDetail.birthDate || owner.birthDate);
+                                                    const newCrew = {
+                                                        fullName: ownerDetail.fullName || owner.fullName,
+                                                        citizenId: ownerDetail.citizenId || owner.citizenId,
+                                                        birthDate: dob,
+                                                        phone: ownerDetail.phone || (owner as any).phone || '',
+                                                        email: ownerDetail.email || (owner as any).email || '',
+                                                        idcrewRole: captainRole ? captainRole.id : ''
+                                                    };
+                                                    setFormData(prev => ({ ...prev, crews: [...(prev.crews || []), newCrew] }));
+                                                    success('Đã thêm chủ tàu vào danh sách thuyền viên với vai trò Thuyền trưởng');
+                                                } catch (e) {
+                                                    showError('Không thể lấy chi tiết chủ tàu. Vui lòng thử lại!');
+                                                }
                                             }
                                         }}
                                     >
@@ -447,7 +456,7 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
                                 )}
                             </div>
                             
-                            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.4fr 1.2fr 1fr 1.3fr', gap: '16px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                                 <div>
                                     <label style={labelStyle}>Họ và tên chủ tàu (*)</label>
                                     {isReadOnly ? (
@@ -522,6 +531,28 @@ export default function ShipModal({ isOpen, onClose, mode, ship, onSubmit }: Shi
                                             {getError('serial')}
                                         </span>
                                     )}
+                                </div>
+                                <div>
+                                    <label style={labelStyle}>Ngày lắp đặt</label>
+                                    <input 
+                                        type="text"
+                                        name="installationDate"
+                                        placeholder="dd/MM/yyyy"
+                                        maxLength={10}
+                                        value={formData.installationDate || ''} 
+                                        onChange={(e) => {
+                                            const prev = formData.installationDate || '';
+                                            const next = handleDateChange(e.target.value, prev);
+                                            setFormData({ ...formData, installationDate: next });
+                                        }}
+                                        onBlur={(e) => {
+                                            const normalized = normalizeDateOnBlur(e.target.value);
+                                            setFormData({ ...formData, installationDate: normalized });
+                                        }}
+                                        className="input" 
+                                        readOnly={isReadOnly}
+                                        style={isReadOnly ? readOnlyStyle : controlStyle}
+                                    />
                                 </div>
                                 <div>
                                     <label style={labelStyle}>Chiều dài lớn nhất (m)</label>

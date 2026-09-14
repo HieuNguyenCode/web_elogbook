@@ -25,6 +25,7 @@ export interface ShipResponse {
         idcrewRole: string
     }[];
     serial: string;
+    installationDate?: string;
     deviceSerial?: string;
     miningLicenseNumber?: string;
     expirationDateOfMiningLicenseNumber?: string;
