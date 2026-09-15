@@ -11,10 +11,9 @@ export const listShipOwnerAPI = async (search: string = '', page: number | null 
     return data;
 }
 
-// Lấy chi tiết chủ tàu
 export const shipOwnerDetailAPI = async (id: string): Promise<ShipOwnerPayload> => {
-    const data = await axiosClient.get<any, any>(`/api/v1/Admin/ShipOwner/${id}`);
-    return data.data;
+    const response = await axiosClient.get<any, any>(`/api/v1/Admin/ShipOwner/${id}`);
+    return response.data || response;
 }
 
 // Tạo mới chủ tàu

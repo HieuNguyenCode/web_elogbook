@@ -5,11 +5,14 @@ import type {ServiceResponse} from '../../types/api';
 import {shipOwnerDetailAPI} from '../../features/API/shipOwner/ShipOwner.ts';
 import {
     getOwnerBirthDate,
-    handleDateChange,
-    normalizeDateOnBlur,
     parseDDMMYYYYToISO,
     saveOwnerBirthDate
 } from '../../utils/dateUtils.ts';
+
+import DatePicker, { registerLocale } from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { vi } from 'date-fns/locale/vi';
+registerLocale('vi', vi);
 
 type ModalMode = 'view' | 'create' | 'edit';
 
@@ -19,6 +22,15 @@ interface OwnerModalProps {
     owner?: ShipOwner | null;
     onClose: () => void;
     onSubmit: (payload: ShipOwnerPayload) => Promise<void>;
+}
+
+const parseToDate = (ddMMyyyy: string | undefined | null) => {
+    if (!ddMMyyyy) return null;
+    const parts = ddMMyyyy.split('/');
+    if (parts.length === 3) {
+       return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+    }
+    return null;
 }
 
 export default function OwnerModal({isOpen, mode, owner, onClose, onSubmit}: OwnerModalProps) {
@@ -38,7 +50,7 @@ export default function OwnerModal({isOpen, mode, owner, onClose, onSubmit}: Own
 
     useEffect(() => {
         if (isOpen && owner && mode !== 'create') {
-            setIsFetchingDetail(true);
+            setTimeout(() => setIsFetchingDetail(true), 0);
             shipOwnerDetailAPI(owner.id)
                 .then(fullOwner => {
                     const dob = getOwnerBirthDate(owner.id, fullOwner.citizenId || owner.citizenId, fullOwner.birthDate);
@@ -58,12 +70,12 @@ export default function OwnerModal({isOpen, mode, owner, onClose, onSubmit}: Own
                     setIsFetchingDetail(false);
                 });
         } else if (isOpen && mode === 'create') {
-            setFormData({fullName: '', citizenId: '', phone: '', email: '', address: '', birthDate: ''});
+            setTimeout(() => setFormData({fullName: "", citizenId: "", phone: "", email: "", address: "", birthDate: ""}), 0);
         }
 
         // Reset errors when modal opens
-        setMainError(null);
-        setFieldErrors({});
+        setTimeout(() => setMainError(null), 0);
+        setTimeout(() => setFieldErrors({}), 0);
     }, [isOpen, owner, mode]);
 
     if (!isOpen) return null;
@@ -74,12 +86,12 @@ export default function OwnerModal({isOpen, mode, owner, onClose, onSubmit}: Own
         setFormData({...formData, [e.target.name]: e.target.value});
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (isReadOnly) return;
 
-        setMainError(null);
-        setFieldErrors({});
+        setTimeout(() => setMainError(null), 0);
+        setTimeout(() => setFieldErrors({}), 0);
         setIsLoading(true);
 
         try {
@@ -164,7 +176,7 @@ export default function OwnerModal({isOpen, mode, owner, onClose, onSubmit}: Own
                         <div>
                             <label className="form-label"
                                    style={{display: 'block', fontSize: '14px', marginBottom: '4px', fontWeight: 500}}>Họ
-                                và tên (*)</label>
+                                và tên (<span style={{ color: 'var(--error-color)', fontWeight: 'bold' }}>*</span>)</label>
                             <input
                                 name="fullName"
                                 value={formData.fullName}
@@ -187,7 +199,7 @@ export default function OwnerModal({isOpen, mode, owner, onClose, onSubmit}: Own
                         <div>
                             <label className="form-label"
                                    style={{display: 'block', fontSize: '14px', marginBottom: '4px', fontWeight: 500}}>CCCD
-                                / CMND (*)</label>
+                                / CMND (<span style={{ color: 'var(--error-color)', fontWeight: 'bold' }}>*</span>)</label>
                             <input
                                 name="citizenId"
                                 value={formData.citizenId}
@@ -240,26 +252,34 @@ export default function OwnerModal({isOpen, mode, owner, onClose, onSubmit}: Own
                                     marginBottom: '4px',
                                     fontWeight: 500
                                 }}>Ngày sinh</label>
-                                <input
-                                    type="text"
-                                    name="birthDate"
-                                    placeholder="dd/MM/yyyy"
-                                    maxLength={10}
-                                    value={formData.birthDate || ''}
-                                    onChange={(e) => {
-                                        const next = handleDateChange(e.target.value, formData.birthDate || '');
-                                        setFormData({...formData, birthDate: next});
+                                <DatePicker
+                                    selected={parseToDate(formData.birthDate)}
+                                    onChange={(date: Date | null) => {
+                                        if (!date) {
+                                            setFormData({ ...formData, birthDate: '' });
+                                        } else {
+                                            const day = String(date.getDate()).padStart(2, '0');
+                                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                                            const year = date.getFullYear();
+                                            setFormData({ ...formData, birthDate: `${day}/${month}/${year}` });
+                                        }
                                     }}
-                                    onBlur={(e) => {
-                                        const normalized = normalizeDateOnBlur(e.target.value);
-                                        setFormData({...formData, birthDate: normalized});
-                                    }}
-                                    className="input"
-                                    readOnly={isReadOnly}
-                                    style={{
-                                        backgroundColor: isReadOnly ? '#f1f5f9' : 'white',
-                                        borderColor: getError('birthDate') ? 'var(--error-color)' : undefined
-                                    }}
+                                    dateFormat="dd/MM/yyyy"
+                                    placeholderText="dd/MM/yyyy"
+                                    locale="vi"
+                                    showMonthDropdown
+                                    showYearDropdown
+                                    dropdownMode="select"
+                                    portalId="root"
+                                    disabled={isReadOnly}
+                                    wrapperClassName="date-picker-wrapper"
+                                    customInput={
+                                        <input className="input" style={{ 
+                                            width: '100%',
+                                            backgroundColor: isReadOnly ? '#f1f5f9' : 'white',
+                                            borderColor: getError('birthDate') ? 'var(--error-color)' : undefined
+                                        }} />
+                                    }
                                 />
                                 {getError('birthDate') && <span style={{
                                     color: 'var(--error-color)',

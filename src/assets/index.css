@@ -468,3 +468,234 @@ button, input, select, textarea {
 }
 
 
+.react-datepicker-wrapper { width: 100%; display: block; }
+
+/* Tùy chỉnh kích thước và giao diện DatePicker để to và đẹp hơn */
+.react-datepicker {
+    font-family: inherit !important;
+    font-size: 15px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+    padding: 8px !important;
+}
+
+.react-datepicker__header {
+    background-color: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    border-top-left-radius: 10px !important;
+    border-top-right-radius: 10px !important;
+    padding-top: 12px !important;
+}
+
+.react-datepicker__current-month,
+.react-datepicker-time__header,
+.react-datepicker-year-header {
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    margin-bottom: 8px !important;
+}
+
+.react-datepicker__day-name {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #64748b !important;
+    width: 2.2rem !important;
+    line-height: 2.2rem !important;
+    margin: 0.166rem !important;
+}
+
+.react-datepicker__day {
+    font-size: 14px !important;
+    width: 2.2rem !important;
+    line-height: 2.2rem !important;
+    margin: 0.166rem !important;
+    border-radius: 50% !important;
+    color: #334155 !important;
+}
+
+.react-datepicker__day:hover {
+    background-color: #e2e8f0 !important;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+    background-color: #0f172a !important;
+    color: white !important;
+    font-weight: 600 !important;
+}
+
+.react-datepicker__day--outside-month {
+    color: #cbd5e1 !important;
+}
+
+/* Custom cho dropdown Tháng/Năm */
+.react-datepicker__month-read-view, .react-datepicker__year-read-view {
+    font-size: 15px !important;
+    font-weight: 500 !important;
+}
+
+.react-datepicker__month-select,
+.react-datepicker__year-select {
+    font-size: 14px !important;
+    padding: 4px 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    background-color: white !important;
+    color: #1e293b !important;
+    margin: 0 4px !important;
+    cursor: pointer !important;
+    outline: none !important;
+}
+
+.react-datepicker__month-select:focus,
+.react-datepicker__year-select:focus {
+    border-color: #94a3b8 !important;
+}
+
+.react-datepicker__navigation {
+    top: 14px !important;
+}
+
+/* Ẩn tiêu đề Tháng/Năm thừa thãi vì đã có dropdown */
+.react-datepicker__current-month {
+    display: none !important;
+}
+
+/* Tăng kích thước tổng thể to hơn nữa */
+.react-datepicker {
+    font-size: 16px !important;
+    padding: 12px !important;
+}
+
+.react-datepicker__header {
+    padding-top: 16px !important;
+    padding-bottom: 12px !important;
+}
+
+.react-datepicker__day-name, .react-datepicker__day {
+    width: 2.8rem !important;
+    line-height: 2.8rem !important;
+    font-size: 15px !important;
+    margin: 0.2rem !important;
+}
+
+.react-datepicker__month-select, .react-datepicker__year-select {
+    font-size: 16px !important;
+    padding: 6px 12px !important;
+    border-radius: 8px !important;
+    height: 38px !important;
+}
+
+/* Đẩy 2 dropdown ra giữa cho cân đối */
+.react-datepicker__header__dropdown {
+    display: flex !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    margin-bottom: 12px !important;
+}
+
+/* Fix cân đối khoảng cách của các Select Tháng/Năm */
+.react-datepicker__header__dropdown {
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    margin: 0 56px 12px 56px !important;
+}
+
+.react-datepicker__month-dropdown-container, 
+.react-datepicker__year-dropdown-container {
+    flex: 1 !important;
+    margin: 0 !important;
+}
+
+.react-datepicker__month-select,
+.react-datepicker__year-select {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    font-size: 15px !important;
+}
+
+/* Chỉnh lại 2 mũi tên trái phải cho cân */
+.react-datepicker__navigation {
+    top: 30px !important;
+}
+.react-datepicker__navigation--previous {
+    left: 12px !important;
+}
+.react-datepicker__navigation--next {
+    right: 12px !important;
+}
+
+/* Tút tát lại 2 nút mũi tên trái/phải cho to, rõ ràng và có hover xịn xò */
+.react-datepicker__navigation {
+    top: 30px !important;
+    height: 34px !important;
+    width: 34px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: background-color 0.15s !important;
+}
+
+.react-datepicker__navigation:hover {
+    background-color: #e2e8f0 !important; /* Nền xám nhạt khi di chuột */
+}
+
+.react-datepicker__navigation-icon {
+    top: 0 !important;
+}
+
+.react-datepicker__navigation-icon::before {
+    border-color: #334155 !important; /* Làm mũi tên đậm màu hơn (chữ gần đen) */
+    border-width: 2.5px 2.5px 0 0 !important; /* Làm mũi tên dày hơn */
+    height: 11px !important; /* Kích thước to hơn */
+    width: 11px !important;
+}
+
+.react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+    border-color: #0f172a !important; /* Đen tuyền khi hover */
+}
+
+.react-datepicker__navigation--previous {
+    left: 12px !important;
+}
+
+.react-datepicker__navigation--next {
+    right: 12px !important;
+}
+
+/* Fix triệt để lệch icon bên trong nút mũi tên */
+.react-datepicker__navigation-icon {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 11px !important;
+    height: 11px !important;
+}
+
+.react-datepicker__navigation-icon::before {
+    top: 50% !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: 10px !important;
+    height: 10px !important;
+}
+
+.react-datepicker__navigation-icon--previous::before {
+    transform: translate(-30%, -50%) rotate(225deg) !important;
+}
+
+.react-datepicker__navigation-icon--next::before {
+    transform: translate(-70%, -50%) rotate(45deg) !important;
+}
+
+.react-datepicker__navigation {
+    top: 30px !important; /* Độ cao nút trùng tâm với 2 ô dropdown (tâm ở 35px) */
+}
+.react-datepicker-popper { z-index: 9999 !important; }
