@@ -6,6 +6,8 @@ services:
       - "44446:44446"
     env_file:
       - .env
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
     restart: unless-stopped
     networks:
       - web_net

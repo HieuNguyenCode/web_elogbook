@@ -6,11 +6,13 @@ import DepartureList from './pages/departures/DepartureList';
 import ArrivalList from './pages/arrivals/ArrivalList';
 import ShipList from './pages/ships/ShipList';
 import OwnerList from './pages/owners/OwnerList';
+import UserList from './pages/users/UserList';
 import type {JSX} from "react";
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { config } from './config/config';
 import { ToastProvider } from './components/ToastContext';
+import { getUserRole } from './utils/jwt';
 
 // Component bảo vệ các route yêu cầu đăng nhập
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
@@ -25,6 +27,15 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
 const PublicRoute = ({ children }: { children: JSX.Element }) => {
     const token = localStorage.getItem('accessToken');
     if (token) {
+        return <Navigate to="/" replace />;
+    }
+    return children;
+};
+
+// Component bảo vệ route dành riêng cho ADMIN
+const AdminRoute = ({ children }: { children: JSX.Element }) => {
+    const role = getUserRole();
+    if (role !== 'ADMIN') {
         return <Navigate to="/" replace />;
     }
     return children;
@@ -96,6 +107,7 @@ export default function App() {
                         <Route path="arrivals" element={<ArrivalList />} />
                         <Route path="ships" element={<ShipList />} />
                         <Route path="owners" element={<OwnerList />} />
+                        <Route path="users" element={<AdminRoute><UserList /></AdminRoute>} />
                     </Route>
                     
                     <Route path="*" element={<Navigate to="/" replace />} />

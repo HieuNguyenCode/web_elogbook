@@ -223,3 +223,12 @@ export const getCrewBirthDate = (identifier: CrewCacheIdentifier, apiBirthDate?:
 
     return '';
 };
+
+export const parseToDate = (ddMMyyyy: string | undefined | null): Date | null => {
+    if (!ddMMyyyy) return null;
+    const parts = ddMMyyyy.split('/');
+    if (parts.length === 3) {
+        return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+    }
+    return null;
+};

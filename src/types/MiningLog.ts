@@ -86,6 +86,18 @@ export interface RarefishreportDto {
     status: string;
 }
 
+export interface CrewDto {
+    id: string;
+    fullName: string;
+    citizenId?: string;
+    phone?: string;
+    crewRole?: {
+        id: string;
+        code: string;
+        description: string;
+    };
+}
+
 export interface MiningLogDto {
     id: string;
     shipName: string;
@@ -114,4 +126,5 @@ export interface MiningLogDto {
     fishingHauls: FishingHaulDto[];
     transshipmentEvents?: TransshipmentEventDto[];
     rareFishReports?: RarefishreportDto[];
+    crew?: CrewDto[];
 }

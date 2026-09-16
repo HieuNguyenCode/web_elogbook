@@ -10,6 +10,7 @@ import {
     ChevronDown
 } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
+import { getUserRole } from '../utils/jwt';
 import './MainLayout.css';
 
 export default function MainLayout() {
@@ -19,6 +20,11 @@ export default function MainLayout() {
     const isShipProfileRoute = location.pathname.startsWith('/ships') || location.pathname.startsWith('/owners');
     const [isShipProfileExpanded, setIsShipProfileExpanded] = useState(isShipProfileRoute);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const [userRole, setUserRole] = useState<string | null>(null);
+
+    useEffect(() => {
+        setUserRole(getUserRole());
+    }, []);
 
     // Khi người dùng chuyển sang các tab khác ngoài Hồ sơ tàu, tự động thu gọn 2 tab con lại
     useEffect(() => {
@@ -106,6 +112,14 @@ export default function MainLayout() {
                                 <span>Danh sách chủ tàu</span>
                             </NavLink>
                         </div>
+                    )}
+                
+                    {/* Menu dành cho ADMIN */}
+                    {userRole === 'ADMIN' && (
+                        <NavLink to="/users" className={({ isActive }) => `nav-item flex items-center gap-sm ${isActive ? 'active' : ''}`}>
+                            <Users size={18} />
+                            <span>Quản lý người dùng</span>
+                        </NavLink>
                     )}
                 </nav>
 

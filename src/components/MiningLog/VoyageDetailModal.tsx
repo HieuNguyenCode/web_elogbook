@@ -254,12 +254,47 @@ export default function VoyageDetailModal({ isOpen, idSeaVoyage, onClose }: Prop
 
                             {activeTab === 'crew' && (
                                 <div style={{ padding: '24px' }}>
-                                    <div className="flex justify-center items-center bg-slate-50" style={{ height: '300px', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
-                                        <div className="text-center text-slate-500">
-                                            <p style={{ marginBottom: '8px' }}>👥 Danh sách thuyền viên</p>
-                                            <p className="text-sm">Hiện tại không có dữ liệu thuyền viên đi kèm chuyến biển này</p>
+                                    {log?.crew && log.crew.length > 0 ? (
+                                        <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                            <thead>
+                                                <tr>
+                                                    <th style={{ textAlign: 'left', padding: '12px 16px', borderBottom: '1px solid #e2e8f0', color: '#64748b', fontSize: '13px', fontWeight: 600 }}>Họ và tên</th>
+                                                    <th style={{ textAlign: 'left', padding: '12px 16px', borderBottom: '1px solid #e2e8f0', color: '#64748b', fontSize: '13px', fontWeight: 600 }}>Số CCCD</th>
+                                                    <th style={{ textAlign: 'left', padding: '12px 16px', borderBottom: '1px solid #e2e8f0', color: '#64748b', fontSize: '13px', fontWeight: 600 }}>Số điện thoại</th>
+                                                    <th style={{ textAlign: 'left', padding: '12px 16px', borderBottom: '1px solid #e2e8f0', color: '#64748b', fontSize: '13px', fontWeight: 600 }}>Vai trò</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {log.crew.map((member, idx) => (
+                                                    <tr key={member.id || idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                                        <td style={{ padding: '12px 16px', fontSize: '14px', color: '#334155', fontWeight: 500 }}>{member.fullName}</td>
+                                                        <td style={{ padding: '12px 16px', fontSize: '14px', color: '#475569' }}>{member.citizenId || '-'}</td>
+                                                        <td style={{ padding: '12px 16px', fontSize: '14px', color: '#475569' }}>{member.phone || '-'}</td>
+                                                        <td style={{ padding: '12px 16px' }}>
+                                                            <span style={{ 
+                                                                display: 'inline-block', 
+                                                                padding: '4px 10px', 
+                                                                backgroundColor: member.crewRole?.code === 'TTR' ? '#e0f2fe' : '#f1f5f9', 
+                                                                color: member.crewRole?.code === 'TTR' ? '#0369a1' : '#475569', 
+                                                                borderRadius: '20px', 
+                                                                fontSize: '12px', 
+                                                                fontWeight: 600 
+                                                            }}>
+                                                                {member.crewRole?.description || member.crewRole?.code || 'Thuyền viên'}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    ) : (
+                                        <div className="flex justify-center items-center bg-slate-50" style={{ height: '300px', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
+                                            <div className="text-center text-slate-500">
+                                                <p style={{ marginBottom: '8px', fontSize: '24px' }}>👥</p>
+                                                <p className="text-sm">Hiện tại không có dữ liệu thuyền viên đi kèm chuyến biển này</p>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
                             )}
 

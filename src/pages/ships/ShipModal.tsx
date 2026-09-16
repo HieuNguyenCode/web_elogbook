@@ -1,21 +1,26 @@
 import React, {useEffect, useState} from 'react';
 import Select from 'react-select';
+import DatePicker, { registerLocale } from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { vi } from 'date-fns/locale/vi';
+registerLocale('vi', vi);
 import {Plus, Trash2, X} from 'lucide-react';
 import {useToast} from '../../components/ToastContext';
 import type {Ship, ShipResponse} from '../../types/Ship';
-import type {CrewRoles, Occupations} from '../../types/Catalog';
+import type {CrewRoles, Occupations, Locations} from '../../types/Catalog';
+import type {UserDto} from '../../features/API/user/UserAPI';
 import type {ShipOwner} from '../../types/ShipOwner';
 import type {ServiceResponse} from '../../types/api';
 import {shipDetailAPI} from '../../features/API/ship/Ship.ts';
-import {crewRolesAPI, occupationsAPI} from '../../features/API/catalog/Catalog.ts';
+import {crewRolesAPI, occupationsAPI, LocationsAPI} from '../../features/API/catalog/Catalog.ts';
+import {getAgencyUsersAPI} from '../../features/API/user/UserAPI.ts';
 import {listShipOwnerAPI, shipOwnerDetailAPI} from '../../features/API/shipOwner/ShipOwner.ts';
 import {
     formatToDDMMYYYY,
     getCrewBirthDate,
     getOwnerBirthDate,
-    handleDateChange,
-    normalizeDateOnBlur,
     parseDDMMYYYYToISO,
+    parseToDate,
     saveCrewBirthDate
 } from '../../utils/dateUtils.ts';
 
@@ -44,6 +49,8 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
     const [crewRolesList, setCrewRolesList] = useState<CrewRoles[]>([]);
     const [occupationsList, setOccupationsList] = useState<Occupations[]>([]);
     const [owners, setOwners] = useState<ShipOwner[]>([]);
+    const [locationsList, setLocationsList] = useState<Locations[]>([]);
+    const [agencyList, setAgencyList] = useState<UserDto[]>([]);
 
     useEffect(() => {
         if (isOpen) {
@@ -60,6 +67,16 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
             });
 
             // Fetch a sufficiently large list of ship owners to display in the dropdown
+            LocationsAPI().then(res => {
+                const list = Array.isArray(res) ? res : (res as any).data || res;
+                if (Array.isArray(list)) setLocationsList(list as Locations[]);
+            }).catch(() => {});
+
+            getAgencyUsersAPI().then(res => {
+                const list = Array.isArray(res) ? res : (res as any).data || res;
+                if (Array.isArray(list)) setAgencyList(list as UserDto[]);
+            }).catch(() => {});
+
             listShipOwnerAPI('', 1, 100).then(res => {
                 if (res.data) {
                     const decorated = res.data.map(o => ({
@@ -87,6 +104,8 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                         secondaryOccupationId1: fullShip.secondaryOccupationId1 || fullShip.secondaryOccupation1?.id || fullShip.SecondaryOccupation1?.id || '',
                         secondaryOccupationId2: fullShip.secondaryOccupationId2 || fullShip.secondaryOccupation2?.id || fullShip.SecondaryOccupation2?.id || '',
                         idshipOwner: fullShip.idshipOwner || fullShip.shipOwner?.id || fullShip.ShipOwner?.id || '',
+                        iduserAgency: fullShip.iduserAgency || fullShip.userAgency?.id,
+                        idlocations: fullShip.idlocations || fullShip.location?.id,
                         installationDate: formatToDDMMYYYY(fullShip.installationDate),
                         expirationDateOfMiningLicenseNumber: formatToDDMMYYYY(fullShip.expirationDateOfMiningLicenseNumber),
                         crews: (fullShip.crews || fullShip.crew || []).map((c: ShipResponse["crews"][0], idx: number) => {
@@ -226,6 +245,9 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
 
             if (formData.secondaryOccupationId1) strictPayload.secondaryOccupationId1 = formData.secondaryOccupationId1;
             if (formData.secondaryOccupationId2) strictPayload.secondaryOccupationId2 = formData.secondaryOccupationId2;
+            if (formData.iduserAgency) strictPayload.iduserAgency = formData.iduserAgency;
+            if (formData.idlocations) strictPayload.idlocations = formData.idlocations;
+            
             if (formData.installationDate) {
                 strictPayload.installationDate = parseDDMMYYYYToISO(formData.installationDate);
             }
@@ -547,6 +569,8 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                                                 setFormData({...formData, idshipOwner: selected ? selected.value : ''});
                                             }}
                                             isClearable
+                                            menuPortalTarget={document.body}
+                                            menuPosition="fixed"
                                             styles={{
                                                 control: (base) => ({
                                                     ...base,
@@ -558,10 +582,7 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                                                         borderColor: '#94a3b8'
                                                     }
                                                 }),
-                                                menu: (base) => ({
-                                                    ...base,
-                                                    zIndex: 9999
-                                                })
+                                                menu: (base) => ({ ...base, zIndex: 9999 }), menuPortal: (base) => ({ ...base, zIndex: 9999 })
                                             }}
                                             noOptionsMessage={() => "Không tìm thấy kết quả"}
                                         />
@@ -625,26 +646,103 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                                         </span>
                                     )}
                                 </div>
+                                
+                                <div>
+                                    <label style={labelStyle}>Tỉnh / Thành phố quản lý</label>
+                                    {isReadOnly ? (
+                                        <input 
+                                            value={locationsList.find(l => l.id === formData.idlocations)?.name || ''} 
+                                            className="input" readOnly style={readOnlyStyle} 
+                                        />
+                                    ) : (
+                                        <Select
+                                            placeholder="-- Chọn tỉnh / thành phố --"
+                                            value={locationsList.filter(l => l.id === formData.idlocations).map(l => ({ value: l.id, label: l.name }))[0] || null}
+                                            options={locationsList.map(l => ({ value: l.id, label: l.name }))}
+                                            onChange={(selected: { value: string, label: string } | null) => {
+                                                setFormData({...formData, idlocations: selected ? selected.value : undefined});
+                                            }}
+                                            isClearable
+                                            menuPortalTarget={document.body}
+                                            menuPosition="fixed"
+                                            styles={{
+                                                control: (base) => ({
+                                                    ...base,
+                                                    minHeight: '42px',
+                                                    borderRadius: '8px',
+                                                    borderColor: getError('idlocations') ? 'var(--error-color)' : '#cbd5e1',
+                                                    boxShadow: 'none',
+                                                    '&:hover': { borderColor: '#94a3b8' }
+                                                }),
+                                                menu: (base) => ({ ...base, zIndex: 9999 }), menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                                            }}
+                                            noOptionsMessage={() => "Không tìm thấy kết quả"}
+                                        />
+                                    )}
+                                    {getError('idlocations') && <span style={{ color: 'var(--error-color)', fontSize: '12px', marginTop: '4px', display: 'block' }}>{getError('idlocations')}</span>}
+                                </div>
+                                
+                                <div>
+                                    <label style={labelStyle}>Đại lý quản lý (Agency)</label>
+                                    {isReadOnly ? (
+                                        <input 
+                                            value={agencyList.find(a => a.id === formData.iduserAgency)?.fullName || ''} 
+                                            className="input" readOnly style={readOnlyStyle} 
+                                        />
+                                    ) : (
+                                        <Select
+                                            placeholder="-- Chọn đại lý --"
+                                            value={agencyList.filter(a => a.id === formData.iduserAgency).map(a => ({ value: a.id, label: a.fullName }))[0] || null}
+                                            options={agencyList.map(a => ({ value: a.id, label: a.fullName }))}
+                                            onChange={(selected: { value: string, label: string } | null) => {
+                                                setFormData({...formData, iduserAgency: selected ? selected.value : undefined});
+                                            }}
+                                            isClearable
+                                            menuPortalTarget={document.body}
+                                            menuPosition="fixed"
+                                            styles={{
+                                                control: (base) => ({
+                                                    ...base,
+                                                    minHeight: '42px',
+                                                    borderRadius: '8px',
+                                                    borderColor: getError('iduserAgency') ? 'var(--error-color)' : '#cbd5e1',
+                                                    boxShadow: 'none',
+                                                    '&:hover': { borderColor: '#94a3b8' }
+                                                }),
+                                                menu: (base) => ({ ...base, zIndex: 9999 }), menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                                            }}
+                                            noOptionsMessage={() => "Không tìm thấy kết quả"}
+                                        />
+                                    )}
+                                    {getError('iduserAgency') && <span style={{ color: 'var(--error-color)', fontSize: '12px', marginTop: '4px', display: 'block' }}>{getError('iduserAgency')}</span>}
+                                </div>
+                                
                                 <div>
                                     <label style={labelStyle}>Ngày lắp đặt</label>
-                                    <input
-                                        type="text"
-                                        name="installationDate"
-                                        placeholder="dd/MM/yyyy"
-                                        maxLength={10}
-                                        value={formData.installationDate || ''}
-                                        onChange={(e) => {
-                                            const prev = formData.installationDate || '';
-                                            const next = handleDateChange(e.target.value, prev);
-                                            setFormData({...formData, installationDate: next});
+                                    <DatePicker
+                                        selected={formData.installationDate ? parseToDate(formData.installationDate) : null}
+                                        onChange={(date: Date | null) => {
+                                            if (!date) {
+                                                setFormData({ ...formData, installationDate: '' });
+                                            } else {
+                                                const day = String(date.getDate()).padStart(2, '0');
+                                                const month = String(date.getMonth() + 1).padStart(2, '0');
+                                                const year = date.getFullYear();
+                                                setFormData({ ...formData, installationDate: `${day}/${month}/${year}` });
+                                            }
                                         }}
-                                        onBlur={(e) => {
-                                            const normalized = normalizeDateOnBlur(e.target.value);
-                                            setFormData({...formData, installationDate: normalized});
-                                        }}
-                                        className="input"
-                                        readOnly={isReadOnly}
-                                        style={isReadOnly ? readOnlyStyle : controlStyle}
+                                        dateFormat="dd/MM/yyyy"
+                                        placeholderText="dd/MM/yyyy"
+                                        locale="vi"
+                                        showMonthDropdown
+                                        showYearDropdown
+                                        dropdownMode="select"
+                                        portalId="root"
+                                        disabled={isReadOnly}
+                                        wrapperClassName="date-picker-wrapper"
+                                        customInput={
+                                            <input className="input" style={isReadOnly ? readOnlyStyle : controlStyle} />
+                                        }
                                     />
                                 </div>
                                 <div>
@@ -701,24 +799,30 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                                 </div>
                                 <div>
                                     <label style={labelStyle}>Thời hạn đến</label>
-                                    <input
-                                        type="text"
-                                        name="expirationDateOfMiningLicenseNumber"
-                                        placeholder="dd/MM/yyyy"
-                                        maxLength={10}
-                                        value={formData.expirationDateOfMiningLicenseNumber || ''}
-                                        onChange={(e) => {
-                                            const prev = formData.expirationDateOfMiningLicenseNumber || '';
-                                            const next = handleDateChange(e.target.value, prev);
-                                            setFormData({...formData, expirationDateOfMiningLicenseNumber: next});
+                                    <DatePicker
+                                        selected={formData.expirationDateOfMiningLicenseNumber ? parseToDate(formData.expirationDateOfMiningLicenseNumber) : null}
+                                        onChange={(date: Date | null) => {
+                                            if (!date) {
+                                                setFormData({ ...formData, expirationDateOfMiningLicenseNumber: '' });
+                                            } else {
+                                                const day = String(date.getDate()).padStart(2, '0');
+                                                const month = String(date.getMonth() + 1).padStart(2, '0');
+                                                const year = date.getFullYear();
+                                                setFormData({ ...formData, expirationDateOfMiningLicenseNumber: `${day}/${month}/${year}` });
+                                            }
                                         }}
-                                        onBlur={(e) => {
-                                            const normalized = normalizeDateOnBlur(e.target.value);
-                                            setFormData({...formData, expirationDateOfMiningLicenseNumber: normalized});
-                                        }}
-                                        className="input"
-                                        readOnly={isReadOnly}
-                                        style={isReadOnly ? readOnlyStyle : controlStyle}
+                                        dateFormat="dd/MM/yyyy"
+                                        placeholderText="dd/MM/yyyy"
+                                        locale="vi"
+                                        showMonthDropdown
+                                        showYearDropdown
+                                        dropdownMode="select"
+                                        portalId="root"
+                                        disabled={isReadOnly}
+                                        wrapperClassName="date-picker-wrapper"
+                                        customInput={
+                                            <input className="input" style={isReadOnly ? readOnlyStyle : controlStyle} />
+                                        }
                                     />
                                 </div>
                                 <div>
@@ -748,6 +852,8 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                                                 });
                                             }}
                                             isClearable
+                                            menuPortalTarget={document.body}
+                                            menuPosition="fixed"
                                             styles={{
                                                 control: (base) => ({
                                                     ...base,
@@ -759,10 +865,7 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                                                         borderColor: '#94a3b8'
                                                     }
                                                 }),
-                                                menu: (base) => ({
-                                                    ...base,
-                                                    zIndex: 9999
-                                                })
+                                                menu: (base) => ({ ...base, zIndex: 9999 }), menuPortal: (base) => ({ ...base, zIndex: 9999 })
                                             }}
                                             noOptionsMessage={() => "Không tìm thấy kết quả"}
                                         />
@@ -798,6 +901,8 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                                                 });
                                             }}
                                             isClearable
+                                            menuPortalTarget={document.body}
+                                            menuPosition="fixed"
                                             styles={{
                                                 control: (base) => ({
                                                     ...base,
@@ -809,10 +914,7 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                                                         borderColor: '#94a3b8'
                                                     }
                                                 }),
-                                                menu: (base) => ({
-                                                    ...base,
-                                                    zIndex: 9999
-                                                })
+                                                menu: (base) => ({ ...base, zIndex: 9999 }), menuPortal: (base) => ({ ...base, zIndex: 9999 })
                                             }}
                                             noOptionsMessage={() => "Không tìm thấy kết quả"}
                                         />
@@ -842,6 +944,8 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                                                 });
                                             }}
                                             isClearable
+                                            menuPortalTarget={document.body}
+                                            menuPosition="fixed"
                                             styles={{
                                                 control: (base) => ({
                                                     ...base,
@@ -853,10 +957,7 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                                                         borderColor: '#94a3b8'
                                                     }
                                                 }),
-                                                menu: (base) => ({
-                                                    ...base,
-                                                    zIndex: 9999
-                                                })
+                                                menu: (base) => ({ ...base, zIndex: 9999 }), menuPortal: (base) => ({ ...base, zIndex: 9999 })
                                             }}
                                             noOptionsMessage={() => "Không tìm thấy kết quả"}
                                         />
@@ -1071,44 +1172,44 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                                                             color: '#334155'
                                                         }}>{formatToDDMMYYYY(member.birthDate) || '-'}</span>
                                                     ) : (
-                                                        <input
-                                                            type="text"
-                                                            placeholder="dd/MM/yyyy"
-                                                            maxLength={10}
-                                                            className="input"
-                                                            style={{
-                                                                ...controlStyle,
-                                                                height: '36px',
-                                                                padding: '0.35rem 0.65rem',
-                                                                fontSize: '13.5px'
-                                                            }}
-                                                            value={member.birthDate || ''}
-                                                            onChange={e => {
-                                                                const next = handleDateChange(e.target.value, member.birthDate || '');
+                                                        <DatePicker
+                                                            selected={member.birthDate ? parseToDate(member.birthDate) : null}
+                                                            onChange={(date: Date | null) => {
+                                                                let next = '';
+                                                                if (date) {
+                                                                    const day = String(date.getDate()).padStart(2, '0');
+                                                                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                                                                    const year = date.getFullYear();
+                                                                    next = `${day}/${month}/${year}`;
+                                                                }
                                                                 handleUpdateCrew(idx, 'birthDate', next);
                                                                 if (next.length === 10) {
                                                                     saveCrewBirthDate({
                                                                         id: member.id,
                                                                         citizenId: member.citizenId,
                                                                         fullName: member.fullName,
-                                                                        shipIdentifier: ship?.id || formData.serial,
+                                                                        shipIdentifier: ship?.id || formData.serial || '',
                                                                         index: idx
                                                                     }, next);
                                                                 }
                                                             }}
-                                                            onBlur={e => {
-                                                                const normalized = normalizeDateOnBlur(e.target.value);
-                                                                handleUpdateCrew(idx, 'birthDate', normalized);
-                                                                if (normalized) {
-                                                                    saveCrewBirthDate({
-                                                                        id: member.id,
-                                                                        citizenId: member.citizenId,
-                                                                        fullName: member.fullName,
-                                                                        shipIdentifier: ship?.id || formData.serial,
-                                                                        index: idx
-                                                                    }, normalized);
-                                                                }
-                                                            }}
+                                                            dateFormat="dd/MM/yyyy"
+                                                            placeholderText="dd/MM/yyyy"
+                                                            locale="vi"
+                                                            showMonthDropdown
+                                                            showYearDropdown
+                                                            dropdownMode="select"
+                                                            portalId="root"
+                                                            disabled={isReadOnly}
+                                                            wrapperClassName="date-picker-wrapper"
+                                                            customInput={
+                                                                <input className="input" style={{
+                                                                    ...controlStyle,
+                                                                    height: '36px',
+                                                                    padding: '0.35rem 0.65rem',
+                                                                    fontSize: '13.5px'
+                                                                }} />
+                                                            }
                                                         />
                                                     )}
                                                 </td>
@@ -1154,7 +1255,9 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                                                                 label: string
                                                             } | null) => handleUpdateCrew(idx, 'idcrewRole', selected ? selected.value : '')}
                                                             isClearable
-                                                            styles={{
+                                            menuPortalTarget={document.body}
+                                            menuPosition="fixed"
+                                            styles={{
                                                                 control: (base) => ({
                                                                     ...base,
                                                                     minHeight: '36px',
@@ -1167,11 +1270,8 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                                                                         borderColor: '#94a3b8'
                                                                     }
                                                                 }),
-                                                                menu: (base) => ({
-                                                                    ...base,
-                                                                    zIndex: 9999,
-                                                                    fontSize: '13.5px'
-                                                                })
+                                                                menu: (base) => ({ ...base, zIndex: 9999,
+                                                                    fontSize: '13.5px' }), menuPortal: (base) => ({ ...base, zIndex: 9999 })
                                                             }}
                                                             noOptionsMessage={() => "Không tìm thấy kết quả"}
                                                         />

@@ -14,12 +14,14 @@ import {
     Search,
     Ship as ShipIcon,
     Trash2,
+    RefreshCw,
     X
 } from 'lucide-react';
 import ShipModal from './ShipModal';
 import ConfirmModal from '../../components/ConfirmModal';
 import {axiosClient} from '../../utils/axiosClient';
 import {useToast} from '../../components/ToastContext';
+import { getUserRole } from '../../utils/jwt';
 
 type ModalMode = 'view' | 'create' | 'edit';
 
@@ -38,6 +40,7 @@ export default function ShipList() {
 
     // Modal state
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const userRole = getUserRole();
     const [modalMode, setModalMode] = useState<ModalMode>('create');
     const [selectedShip, setSelectedShip] = useState<Ship | null>(null);
 
@@ -212,6 +215,12 @@ export default function ShipList() {
                     </span>
                 </div>
                 <div className="flex items-center gap-md">
+                    <button className="btn btn-outline flex items-center gap-sm"
+                            onClick={() => fetchShips(search, page)}
+                            style={{borderRadius: '8px', padding: '0 16px', fontWeight: 600}}>
+                        <RefreshCw size={18}/>
+                        <span>Làm mới</span>
+                    </button>
                     <div style={{position: 'relative'}}>
                         <Search
                             size={17}
@@ -260,12 +269,14 @@ export default function ShipList() {
                             </button>
                         )}
                     </div>
-                    <button className="btn btn-primary flex items-center gap-sm"
+                    {userRole === 'ADMIN' && (
+                        <button className="btn btn-primary flex items-center gap-sm"
                             onClick={() => handleOpenModal('create')}
                             style={{borderRadius: '8px', padding: '0 16px', fontWeight: 600}}>
                         <Plus size={18}/>
                         <span>Thêm tàu</span>
                     </button>
+                    )}
                 </div>
             </div>
 
@@ -395,6 +406,7 @@ export default function ShipList() {
                                                 >
                                                     <Eye size={17}/>
                                                 </button>
+                                                {userRole === 'ADMIN' && (
                                                 <button
                                                     className="btn btn-text"
                                                     title="Chỉnh sửa"
@@ -409,6 +421,7 @@ export default function ShipList() {
                                                 >
                                                     <Pencil size={17}/>
                                                 </button>
+                                            )}
                                                 <button
                                                     className="btn btn-text"
                                                     title="Xóa tàu"

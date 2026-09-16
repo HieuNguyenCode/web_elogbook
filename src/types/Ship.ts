@@ -17,6 +17,10 @@ export interface Ship {
 export interface ShipResponse {
     name: string;
     idshipOwner: string;
+    iduserAgency?: string;
+    idlocations?: string;
+    location?: { id: string; name?: string; code?: string };
+    userAgency?: { id: string; fullName?: string };
     crews: {
         id?: string,
         idcrew?: string,

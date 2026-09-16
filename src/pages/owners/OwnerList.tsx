@@ -7,11 +7,12 @@ import {
     updateShipOwnerAPI
 } from '../../features/API/shipOwner/ShipOwner.ts';
 import type {ShipOwner, ShipOwnerPayload} from '../../types/ShipOwner';
-import {AlertCircle, ChevronLeft, ChevronRight, Eye, Pencil, Plus, Search, Trash2, User, X} from 'lucide-react';
+import {AlertCircle, ChevronLeft, ChevronRight, Eye, Pencil, Plus, Search, Trash2, User, X, RefreshCw} from 'lucide-react';
 import OwnerModal from './OwnerModal';
 import ConfirmModal from '../../components/ConfirmModal';
 import {axiosClient} from '../../utils/axiosClient';
 import {useToast} from '../../components/ToastContext';
+import { getUserRole } from '../../utils/jwt';
 
 type ModalMode = 'view' | 'create' | 'edit';
 
@@ -29,6 +30,7 @@ export default function OwnerList() {
 
     // Modal state
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const userRole = getUserRole();
     const [modalMode, setModalMode] = useState<ModalMode>('create');
     const [selectedOwner, setSelectedOwner] = useState<ShipOwner | null>(null);
 
@@ -160,6 +162,12 @@ export default function OwnerList() {
                     </span>
                 </div>
                 <div className="flex items-center gap-md">
+                    <button className="btn btn-outline flex items-center gap-sm"
+                            onClick={() => fetchOwners(search, page)}
+                            style={{borderRadius: '8px', padding: '0 16px', fontWeight: 600}}>
+                        <RefreshCw size={18}/>
+                        <span>Làm mới</span>
+                    </button>
                     <div style={{position: 'relative'}}>
                         <Search
                             size={17}
@@ -208,12 +216,14 @@ export default function OwnerList() {
                             </button>
                         )}
                     </div>
-                    <button className="btn btn-primary flex items-center gap-sm"
+                    {userRole === 'ADMIN' && (
+                        <button className="btn btn-primary flex items-center gap-sm"
                             onClick={() => handleOpenModal('create')}
                             style={{borderRadius: '8px', padding: '0 16px', fontWeight: 600}}>
                         <Plus size={18}/>
                         <span>Thêm chủ tàu</span>
                     </button>
+                    )}
                 </div>
             </div>
 
@@ -350,6 +360,7 @@ export default function OwnerList() {
                                                 >
                                                     <Eye size={17}/>
                                                 </button>
+                                                {userRole === 'ADMIN' && (
                                                 <button
                                                     className="btn btn-text"
                                                     title="Chỉnh sửa"
@@ -364,6 +375,7 @@ export default function OwnerList() {
                                                 >
                                                     <Pencil size={17}/>
                                                 </button>
+                                            )}
                                                 <button
                                                     className="btn btn-text"
                                                     title="Xóa chủ tàu"

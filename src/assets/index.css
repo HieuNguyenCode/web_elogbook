@@ -699,3 +699,7 @@ button, input, select, textarea {
     top: 30px !important; /* Độ cao nút trùng tâm với 2 ô dropdown (tâm ở 35px) */
 }
 .react-datepicker-popper { z-index: 9999 !important; }
+
+.react-datepicker-popper {
+    z-index: 9999 !important;
+}
