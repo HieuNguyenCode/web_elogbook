@@ -62,7 +62,7 @@ export default function DepartureList() {
                             <span>Làm mới</span>
                         </button>
                     </div>
-                    <div className="relative" style={{ display: 'flex', alignItems: 'center', flex: '1 1 auto', minWidth: '250px', maxWidth: '350px' }}>
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', flex: '1 1 auto', minWidth: '250px', maxWidth: '350px' }}>
                         <Search size={18} style={{ position: 'absolute', left: '12px', color: '#94a3b8' }} />
                         <input
                             type="text"
@@ -90,34 +90,52 @@ export default function DepartureList() {
                         <thead>
                             <tr>
                                 <th style={{ width: '60px', textAlign: 'center' }}>STT</th>
-                                <th style={{ minWidth: '150px' }}>Tên tàu / Biển số</th>
-                                <th style={{ minWidth: '150px' }}>Cảng xuất</th>
-                                <th style={{ minWidth: '150px' }}>Thời gian xuất</th>
-                                <th style={{ minWidth: '150px' }}>Nghề chính</th>
-                                <th style={{ width: '130px', textAlign: 'center' }}>Thao tác</th>
+                                <th style={{ minWidth: '130px' }}>Tàu cá</th>
+                                <th style={{ minWidth: '80px' }}>Loại</th>
+                                <th style={{ minWidth: '180px' }}>Giấy phép</th>
+                                <th style={{ minWidth: '120px' }}>Nghề chính</th>
+                                <th style={{ minWidth: '160px' }}>Xuất bến</th>
+                                <th style={{ width: '100px', textAlign: 'center' }}>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
                             {isLoading ? (
-                                <tr><td colSpan={6} className="text-center" style={{ padding: '2rem' }}>Đang tải...</td></tr>
+                                <tr><td colSpan={7} className="text-center" style={{ padding: '2rem' }}>Đang tải...</td></tr>
                             ) : departures.length === 0 ? (
-                                <tr><td colSpan={6} className="text-center" style={{ padding: '2rem' }}>Chưa có dữ liệu.</td></tr>
+                                <tr><td colSpan={7} className="text-center" style={{ padding: '2rem' }}>Chưa có dữ liệu.</td></tr>
                             ) : (
                                 departures.map((dep, index) => (
                                     <tr key={dep.id} onClick={() => setSelectedVoyage(dep.id)} style={{ cursor: 'pointer' }} className="hover:bg-slate-50">
                                         <td className="text-center">{(page - 1) * pageSize + index + 1}</td>
-                                        <td className="font-semibold" style={{ color: '#0f172a' }}>{dep.shipName}</td>
-                                        <td>
-                                            <div className="flex items-center gap-xs">
-                                                <MapPin size={14} style={{ color: '#ef4444' }} />
-                                                <span>{dep.portStart}</span>
-                                            </div>
+                                        <td className="font-semibold" style={{ color: '#0f172a', fontSize: '14px' }}>
+                                            {dep.shipName}
                                         </td>
-                                        <td>{new Date(dep.departureDate).toLocaleString('vi-VN')}</td>
+                                        <td>
+                                            <span style={{ fontSize: '13px', color: '#475569' }}>{dep.type || 'Không rõ'}</span>
+                                        </td>
+                                        <td>
+                                            {dep.miningLicenseNumber ? (
+                                                <div style={{ fontSize: '12px', color: '#0284c7', fontWeight: 500, backgroundColor: '#e0f2fe', padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
+                                                    Số: {dep.miningLicenseNumber}
+                                                    {dep.expirationDateOfMiningLicenseNumber && <div style={{ color: '#0369a1', marginTop: '2px' }}>(Hạn: {new Date(dep.expirationDateOfMiningLicenseNumber).toLocaleDateString('vi-VN')})</div>}
+                                                </div>
+                                            ) : (
+                                                <span style={{ fontSize: '13px', color: '#94a3b8' }}>Không có</span>
+                                            )}
+                                        </td>
                                         <td>
                                             <span style={{ padding: '4px 8px', backgroundColor: '#eff6ff', color: '#3b82f6', borderRadius: '6px', fontSize: '12px', fontWeight: 500 }}>
                                                 {dep.mainOccupation}
                                             </span>
+                                        </td>
+                                        <td>
+                                            <div className="flex items-center gap-xs" style={{ marginBottom: '4px' }}>
+                                                <MapPin size={14} style={{ color: '#f59e0b' }} />
+                                                <span style={{ fontWeight: 500 }}>{dep.portStart}</span>
+                                            </div>
+                                            <div style={{ fontSize: '12px', color: '#64748b' }}>
+                                                {dep.departureDate ? new Date(dep.departureDate).toLocaleString('vi-VN') : 'Không rõ'}
+                                            </div>
                                         </td>
                                         <td className="text-center">
                                             <button className="btn btn-text" onClick={(e) => { e.stopPropagation(); setSelectedVoyage(dep.id); }} style={{ padding: '6px 12px', fontSize: '13px' }}>

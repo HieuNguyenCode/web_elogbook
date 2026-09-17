@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {X} from 'lucide-react';
+import {X, Save} from 'lucide-react';
 import type {ShipOwner, ShipOwnerPayload} from '../../types/ShipOwner';
 import type {ServiceResponse} from '../../types/api';
 import {shipOwnerDetailAPI} from '../../features/API/shipOwner/ShipOwner.ts';
@@ -315,12 +315,12 @@ export default function OwnerModal({isOpen, mode, owner, onClose, onSubmit}: Own
                     </div>
 
                     <div className="modal-footer">
-                        <button type="button" className="btn btn-outline" onClick={onClose}>
-                            Đóng
+                        <button type="button" className="btn btn-outline flex items-center gap-xs" onClick={onClose}>
+                            <X size={18} /> Đóng
                         </button>
                         {!isReadOnly && (
-                            <button type="submit" className="btn btn-primary" disabled={isLoading}>
-                                {isLoading ? 'Đang lưu...' : 'Lưu thông tin'}
+                            <button type="submit" className="btn btn-primary flex items-center gap-xs" disabled={isLoading}>
+                                <Save size={18} /> {isLoading ? 'Đang lưu...' : 'Lưu thông tin'}
                             </button>
                         )}
                     </div>

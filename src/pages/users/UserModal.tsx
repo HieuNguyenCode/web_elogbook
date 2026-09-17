@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
-import { X, AlertCircle } from 'lucide-react';
+import { X, AlertCircle , Save} from 'lucide-react';
 import { createUserAPI, updateUserAPI } from '../../features/API/user/UserAPI';
 import type { UserDto } from '../../features/API/user/UserAPI';
 import { useToast } from '../../components/ToastContext';
@@ -171,8 +171,8 @@ export default function UserModal({ isOpen, user, onClose, onSuccess }: Props) {
                         <button type="button" className="btn btn-outline" onClick={onClose} style={{ padding: '8px 16px' }}>
                             Đóng
                         </button>
-                        <button type="submit" className="btn btn-primary" disabled={isSaving} style={{ padding: '8px 16px' }}>
-                            {isSaving ? 'Đang lưu...' : 'Lưu thông tin'}
+                        <button type="submit" className="btn btn-primary flex items-center gap-xs" disabled={isSaving} style={{ padding: '8px 16px' }}>
+                            <Save size={18} /> {isSaving ? 'Đang lưu...' : 'Lưu thông tin'}
                         </button>
                     </div>
                 </form>

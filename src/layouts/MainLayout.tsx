@@ -61,7 +61,7 @@ export default function MainLayout() {
             <div className="mobile-header">
                 <div className="flex items-center gap-sm">
                     <Anchor size={20} color="#60a5fa" />
-                    <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>SEADIARY</span>
+                    <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>NHẬT KÝ ĐIỆN TỬ</span>
                 </div>
                 <button className="mobile-menu-btn" onClick={() => setIsSidebarOpen(true)}>
                     <Menu size={24} />
@@ -77,8 +77,8 @@ export default function MainLayout() {
                         <Anchor size={22} color="#ffffff" />
                     </div>
                     <div>
-                        <div className="sidebar-title">SEADIARY</div>
-                        <div className="sidebar-subtitle">NHẬT KÝ ĐIỆN TỬ</div>
+                        <div className="sidebar-title">NHẬT KÝ ĐIỆN TỬ</div>
+                        <div className="sidebar-subtitle">HỆ THỐNG QUẢN LÝ</div>
                     </div>
                 </div>
 

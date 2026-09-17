@@ -1,7 +1,7 @@
 import { useEffect, useState, Fragment } from 'react';
 
 import { axiosClient } from '../../utils/axiosClient';
-import { X, ChevronDown, ChevronRight } from 'lucide-react';
+import { X, ChevronDown, ChevronRight, FileText, Ship, User, CreditCard, Phone, Mail, MapPin, Briefcase, ClipboardCheck, Ruler, Scale, Hash, BookOpen, LogOut, LogIn, Anchor, CalendarClock, Navigation, Calendar, Info, Map, Users, ArrowRightLeft, FileBadge } from 'lucide-react';
 import type { MiningLogDto } from '../../types/MiningLog';
 import { miningLogDetailAPI } from '../../features/API/miningLog/MiningLog';
 import VoyageMap from './VoyageMap';
@@ -14,6 +14,19 @@ interface Props {
 }
 
 export default function VoyageDetailModal({ isOpen, idSeaVoyage, onClose }: Props) {
+
+    const InfoRow = ({ icon: Icon, label, value }: { icon: any, label: string, value: React.ReactNode }) => (
+        <div className="gap-sm" style={{ display: 'flex', alignItems: 'flex-start', paddingBottom: '12px' }}>
+            <div style={{ padding: '8px', backgroundColor: '#e2e8f0', borderRadius: '8px', color: '#475569', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon size={16} />
+            </div>
+            <div className="flex-1" style={{ paddingTop: '2px' }}>
+                <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</div>
+                <div style={{ color: '#0f172a', fontSize: '14px', fontWeight: 600, wordBreak: 'break-word' }}>{value || <span className="text-muted font-normal">Không có dữ liệu</span>}</div>
+            </div>
+        </div>
+    );
+
     const [log, setLog] = useState<MiningLogDto | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [expandedHauls, setExpandedHauls] = useState<number[]>([]);
@@ -26,7 +39,7 @@ export default function VoyageDetailModal({ isOpen, idSeaVoyage, onClose }: Prop
         if (activeTab === 'pdf' && log?.id && !pdfUrl) {
             axiosClient.get(`/api/v2/Admin/MiningLog/DownloadPdf/${log.id}`, { responseType: 'blob' })
                 .then((res: any) => {
-                    const url = URL.createObjectURL(res);
+                    const url = URL.createObjectURL(new Blob([res], { type: 'application/pdf' }));
                     setPdfUrl(url);
                 })
                 .catch(err => {
@@ -103,89 +116,130 @@ export default function VoyageDetailModal({ isOpen, idSeaVoyage, onClose }: Prop
                     <>
                         {/* Top Tabs */}
                         <div className="flex modal-tabs-p" style={{ borderBottom: '1px solid #e2e8f0', overflowX: 'auto' }}>
-                            {['Thông tin chung', 'Bản đồ', 'Thuyền viên', 'Nhật ký khai thác', 'Chuyển tải', 'File PDF'].map(tab => {
-                                const tabMap: any = { 'Thông tin chung': 'info', 'Bản đồ': 'map', 'Thuyền viên': 'crew', 'Nhật ký khai thác': 'log', 'Chuyển tải': 'transship', 'File PDF': 'pdf' };
-                                const tabKey = tabMap[tab];
-                                const isActive = activeTab === tabKey;
-                                return (
-                                    <button 
-                                        key={tabKey}
-                                        className={`btn btn-text ${isActive ? 'font-bold' : ''}`}
-                                        style={{ 
-                                            padding: '16px 20px', 
-                                            borderBottom: isActive ? '2px solid #3b82f6' : '2px solid transparent', 
-                                            borderRadius: 0, 
-                                            color: isActive ? '#3b82f6' : '#64748b',
-                                            whiteSpace: 'nowrap',
-                                            fontSize: '14px'
-                                        }}
-                                        onClick={() => setActiveTab(tabKey)}
-                                    >
-                                        {tab} {tabKey === 'log' ? `(${log.fishingHauls?.length || 0})` : ''} {tabKey === 'transship' ? `(${log.transshipmentEvents?.length || 0})` : ''}
-                                    </button>
-                                );
-                            })}
+                            {[
+    { label: 'Thông tin chung', key: 'info', Icon: Info },
+    { label: 'Bản đồ', key: 'map', Icon: Map },
+    { label: 'Thuyền viên', key: 'crew', Icon: Users },
+    { label: 'Nhật ký khai thác', key: 'log', Icon: BookOpen },
+    { label: 'Chuyển tải', key: 'transship', Icon: ArrowRightLeft },
+    { label: 'File PDF', key: 'pdf', Icon: FileBadge }
+].map(tabObj => {
+    const { label: tab, key: tabKey, Icon } = tabObj;
+    const isActive = activeTab === tabKey;
+    return (
+        <button 
+            key={tabKey}
+            className={`btn btn-text ${isActive ? 'font-bold' : ''}`}
+            style={{ 
+                padding: '16px 20px', 
+                borderBottom: isActive ? '2px solid #3b82f6' : '2px solid transparent', 
+                borderRadius: 0, 
+                color: isActive ? '#3b82f6' : '#64748b',
+                whiteSpace: 'nowrap',
+                fontSize: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+            }}
+            onClick={() => setActiveTab(tabKey as any)}
+        >
+            <Icon size={18} />
+            <span>{tab} {tabKey === 'log' ? `(${log.fishingHauls?.length || 0})` : ''} {tabKey === 'transship' ? `(${log.transshipmentEvents?.length || 0})` : ''}</span>
+        </button>
+    );
+})}
                         </div>
 
                         {/* Content Area */}
                         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
                             {activeTab === 'info' && (
-                                <div className="modal-body-p">
+                                <div className="modal-body-p" style={{ backgroundColor: '#f1f5f9' }}>
                                     <div className="responsive-grid-2 gap-md">
-                                        <div style={{ backgroundColor: '#f8fafc', padding: '20px', borderRadius: '8px' }}>
-                                            <h3 className="font-semibold text-lg" style={{ color: '#0f172a', marginBottom: '16px', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>Thông tin tàu & Chủ tàu</h3>
-                                            <div className="flex flex-col gap-xs text-sm">
-                                                <p><strong>Tên tàu:</strong> {log.shipName}</p>
-                                                <p><strong>Chủ tàu:</strong> {log.shipOwnerFullName} (CCCD: {log.shipOwnerCitizenId})</p>
-                                                {log.shipOwnerBirthDate && <p><strong>Ngày sinh:</strong> {new Date(log.shipOwnerBirthDate).toLocaleDateString('vi-VN')}</p>}
-                                                {log.shipOwnerPhone && <p><strong>Điện thoại:</strong> {log.shipOwnerPhone}</p>}
-                                                {log.shipOwnerEmail && <p><strong>Email:</strong> {log.shipOwnerEmail}</p>}
-                                                {log.shipOwnerAddress && <p><strong>Địa chỉ:</strong> {log.shipOwnerAddress}</p>}
-                                                
-                                                <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px dashed #cbd5e1' }}>
-                                                    <p><strong>Loại nghề chính:</strong> {log.mainOccupation?.name} ({log.mainOccupation?.code})</p>
-                                                    {log.secondaryOccupation1 && <p><strong>Nghề phụ 1:</strong> {log.secondaryOccupation1.name}</p>}
-                                                    {log.secondaryOccupation2 && <p><strong>Nghề phụ 2:</strong> {log.secondaryOccupation2.name}</p>}
+                                        
+                                        {/* Card 1: Thông tin Tàu & Chủ Tàu */}
+                                        <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
+                                            <h3 className="flex items-center gap-sm" style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #e2e8f0' }}>
+                                                <Ship size={20} color="#3b82f6" /> 
+                                                <span>Hồ sơ Tàu & Chủ tàu</span>
+                                            </h3>
+                                            
+                                            <div className="responsive-grid-2 gap-md">
+                                                <div>
+                                                    <InfoRow icon={Ship} label="Tên tàu / Biển số" value={log.shipName} />
+                                                    <InfoRow icon={User} label="Họ tên chủ tàu" value={log.shipOwnerFullName} />
+                                                    <InfoRow icon={CreditCard} label="CCCD / CMND" value={log.shipOwnerCitizenId} />
+                                                    <InfoRow icon={Calendar} label="Ngày sinh" value={log.shipOwnerBirthDate ? new Date(log.shipOwnerBirthDate).toLocaleDateString('vi-VN') : null} />
+                                                    <InfoRow icon={Phone} label="Điện thoại" value={log.shipOwnerPhone} />
+                                                    <InfoRow icon={Mail} label="Email" value={log.shipOwnerEmail} />
+                                                    <InfoRow icon={MapPin} label="Địa chỉ" value={log.shipOwnerAddress} />
                                                 </div>
-                                                <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px dashed #cbd5e1' }}>
-                                                    {log.miningLicenseNumber && <p><strong>Giấy phép KT:</strong> {log.miningLicenseNumber} {log.expirationDateOfMiningLicenseNumber && <span>(Hết hạn: {new Date(log.expirationDateOfMiningLicenseNumber).toLocaleDateString('vi-VN')})</span>}</p>}
-                                                    <p><strong>Loại tàu (Type):</strong> {log.type}</p>
-                                                    <p><strong>Kích thước 1:</strong> {log.dimension1} | <strong>Kích thước 2:</strong> {log.dimension2}</p>
-                                                    <p><strong>Quy cách ngư cụ:</strong> {log.fishingGearSpecifications}</p>
+                                                <div>
+                                                    <InfoRow icon={Briefcase} label="Loại nghề chính" value={log.mainOccupation ? `${log.mainOccupation.name} (${log.mainOccupation.code})` : null} />
+                                                    <InfoRow icon={ClipboardCheck} label="Giấy phép khai thác" value={log.miningLicenseNumber ? `${log.miningLicenseNumber} ${log.expirationDateOfMiningLicenseNumber ? '(Hạn: ' + new Date(log.expirationDateOfMiningLicenseNumber).toLocaleDateString('vi-VN') + ')' : ''}` : null} />
+                                                    <InfoRow icon={Anchor} label="Loại tàu (Type)" value={log.type} />
+                                                    <InfoRow icon={Ruler} label="Kích thước (K1 - K2)" value={`${log.dimension1}m - ${log.dimension2}m`} />
+                                                    <InfoRow icon={Scale} label="Quy cách ngư cụ" value={log.fishingGearSpecifications} />
+                                                    {(log.secondaryOccupation1 || log.secondaryOccupation2) && (
+                                                        <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed #e2e8f0' }}>
+                                                            <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Nghề phụ</div>
+                                                            {log.secondaryOccupation1 && <div style={{ fontSize: '14px', fontWeight: 500, color: '#334155', marginBottom: '8px' }}>• {log.secondaryOccupation1.name}</div>}
+                                                            {log.secondaryOccupation2 && <div style={{ fontSize: '14px', fontWeight: 500, color: '#334155' }}>• {log.secondaryOccupation2.name}</div>}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
-                                        
-                                        <div className="flex flex-col gap-md">
-                                            <div style={{ backgroundColor: '#f0fdf4', padding: '20px', borderRadius: '8px' }}>
-                                                <h3 className="font-semibold text-lg" style={{ color: '#0f172a', marginBottom: '16px', borderBottom: '1px solid #bbf7d0', paddingBottom: '8px' }}>Thông tin xuất bến</h3>
-                                                <div className="flex flex-col gap-xs text-sm">
-                                                    <p><strong>Mã chuyến:</strong> {log.idtrip}</p>
-                                                    <p><strong>Cảng xuất:</strong> {log.portStart?.name} ({log.portStart?.code})</p>
-                                                    <p><strong>Thời gian xuất:</strong> {new Date(log.departureDate).toLocaleString('vi-VN')}</p>
-                                                    {log.departureRecordNo && <p><strong>Số biên bản xuất:</strong> {log.departureRecordNo}</p>}
-                                                </div>
+
+                                        {/* Card 2: Thông tin Chuyến Biển */}
+                                        <div style={{ backgroundColor: '#ffffff', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>
+                                            <h3 className="flex items-center gap-sm" style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #e2e8f0' }}>
+                                                <Navigation size={20} color="#10b981" /> 
+                                                <span>Lịch trình Chuyến biển</span>
+                                            </h3>
+                                            
+                                            <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
+                                                <InfoRow icon={Hash} label="Mã chuyến biển (Trip ID)" value={<span style={{ color: '#2563eb', fontFamily: 'monospace', fontSize: '15px' }}>{log.idtrip}</span>} />
                                             </div>
 
-                                            {log.arrivalDate && (
-                                                <div style={{ backgroundColor: '#eff6ff', padding: '20px', borderRadius: '8px' }}>
-                                                    <h3 className="font-semibold text-lg" style={{ color: '#0f172a', marginBottom: '16px', borderBottom: '1px solid #bfdbfe', paddingBottom: '8px' }}>Thông tin cập bến</h3>
-                                                    <div className="flex flex-col gap-xs text-sm">
-                                                        <p><strong>Cảng cập:</strong> {log.portEnd?.name} ({log.portEnd?.code})</p>
-                                                        <p><strong>Thời gian cập:</strong> {new Date(log.arrivalDate).toLocaleString('vi-VN')}</p>
-                                                        {log.arrivalRecordNo && <p><strong>Số biên bản cập:</strong> {log.arrivalRecordNo}</p>}
+                                            <div className="flex-1 flex flex-col gap-md">
+                                                {/* Khu vực xuất bến */}
+                                                <div style={{ padding: '16px', border: '1px solid #e0e7ff', borderRadius: '8px', backgroundColor: '#eef2ff' }}>
+                                                    <div className="flex items-center gap-xs" style={{ color: '#4338ca', fontWeight: 700, marginBottom: '16px', fontSize: '15px' }}>
+                                                        <LogOut size={18} />
+                                                        <span>THÔNG TIN XUẤT BẾN</span>
                                                     </div>
+                                                    <InfoRow icon={BookOpen} label="Số sổ xuất bến" value={log.departureRecordNo} />
+                                                    <InfoRow icon={CalendarClock} label="Ngày xuất bến" value={new Date(log.departureDate).toLocaleString('vi-VN')} />
+                                                    <InfoRow icon={MapPin} label="Cảng xuất" value={log.portStart?.name} />
                                                 </div>
-                                            )}
+
+                                                {/* Khu vực cập bến */}
+                                                {log.arrivalDate ? (
+                                                    <div style={{ padding: '16px', border: '1px solid #dcfce7', borderRadius: '8px', backgroundColor: '#f0fdf4' }}>
+                                                        <div className="flex items-center gap-xs" style={{ color: '#15803d', fontWeight: 700, marginBottom: '16px', fontSize: '15px' }}>
+                                                            <LogIn size={18} />
+                                                            <span>THÔNG TIN CẬP BẾN</span>
+                                                        </div>
+                                                        <InfoRow icon={BookOpen} label="Số sổ cập bến" value={log.arrivalRecordNo} />
+                                                        <InfoRow icon={CalendarClock} label="Ngày cập bến" value={new Date(log.arrivalDate).toLocaleString('vi-VN')} />
+                                                        <InfoRow icon={MapPin} label="Cảng cập" value={log.portEnd?.name} />
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ padding: '16px', border: '1px dashed #cbd5e1', borderRadius: '8px', backgroundColor: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                                                        <span style={{ color: '#64748b', fontStyle: 'italic', fontSize: '14px' }}>Chuyến biển chưa cập bến</span>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
+
                                     </div>
                                 </div>
                             )}
 
                             {activeTab === 'map' && (
-                                <div style={{ display: 'flex', height: '100%' }}>
+                                <div className="map-layout">
                                     {/* Map Sidebar - Timeline */}
-                                    <div style={{ width: '400px', borderRight: '1px solid #e2e8f0', overflowY: 'auto', padding: '24px', backgroundColor: '#f8fafc' }}>
+                                    <div className="map-sidebar">
                                         <h3 className="font-bold text-lg mb-6">Hải trình chuyến biển</h3>
                                         <div className="flex flex-col gap-4">
                                             {/* Start Port */}
@@ -265,7 +319,7 @@ export default function VoyageDetailModal({ isOpen, idSeaVoyage, onClose }: Prop
                                     </div>
                                     
                                     {/* Main Map Area */}
-                                    <div style={{ flex: 1, position: 'relative' }}>
+                                    <div className="map-main">
                                         <VoyageMap log={log} />
                                     </div>
                                 </div>
@@ -468,11 +522,30 @@ export default function VoyageDetailModal({ isOpen, idSeaVoyage, onClose }: Prop
                             {activeTab === 'pdf' && (
                                 <div className="flex flex-col" style={{ padding: 0, flex: 1, height: '100%' }}>
                                     {pdfUrl ? (
-        <iframe 
-            src={pdfUrl}
-            style={{ width: '100%', height: '100%', minHeight: '75vh', border: 'none' }}
-            title="PDF Viewer"
-        />
+        /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '50vh', padding: '20px', backgroundColor: '#f8fafc' }}>
+                <FileText size={64} color="#94a3b8" style={{ marginBottom: '16px' }} />
+                <h4 style={{ fontSize: '18px', fontWeight: 600, color: '#0f172a', marginBottom: '8px' }}>Tài liệu PDF</h4>
+                <p style={{ textAlign: 'center', color: '#64748b', marginBottom: '24px', maxWidth: '300px', lineHeight: 1.5 }}>
+                    Trình duyệt trên điện thoại không hỗ trợ xem trực tiếp. Vui lòng tải về máy để xem chi tiết.
+                </p>
+                <a 
+                    href={pdfUrl} 
+                    target="_blank" rel="noopener noreferrer"
+                    className="btn btn-primary"
+                    style={{ padding: '12px 24px', borderRadius: '8px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
+                >
+                    <FileText size={20} />
+                    <span>Tải file PDF xuống máy</span>
+                </a>
+            </div>
+        ) : (
+            <iframe 
+                src={pdfUrl}
+                style={{ width: '100%', height: '100%', minHeight: '75vh', border: 'none' }}
+                title="PDF Viewer"
+            />
+        )
     ) : pdfError ? (
         <div style={{ padding: '20px', color: 'red', textAlign: 'center' }}>{pdfError}</div>
     ) : (

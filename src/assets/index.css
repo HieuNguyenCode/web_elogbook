@@ -754,3 +754,40 @@ button, input, select, textarea {
     .modal-body-p { padding: 12px; }
     .responsive-grid-2 { grid-template-columns: 1fr; }
 }
+
+/* Voyage Map Layout */
+.map-layout {
+    display: flex;
+    height: 100%;
+    flex-direction: row;
+}
+.map-sidebar {
+    width: 400px;
+    border-right: 1px solid #e2e8f0;
+    overflow-y: auto;
+    padding: 24px;
+    background-color: #f8fafc;
+}
+.map-main {
+    flex: 1;
+    position: relative;
+    min-height: 0;
+}
+
+@media (max-width: 768px) {
+    .map-layout {
+        flex-direction: column-reverse;
+    }
+    .map-sidebar {
+        width: 100% !important;
+        border-right: none;
+        border-top: 1px solid #e2e8f0;
+        padding: 16px;
+        flex: 1;
+    }
+    .map-main {
+        flex: none;
+        height: 50vh;
+        min-height: 350px;
+    }
+}

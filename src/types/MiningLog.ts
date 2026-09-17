@@ -10,10 +10,12 @@ export interface LeavingPortsDto {
 }
 
 export interface ArrivingPortsDto {
-    id: string; // idSeaVoyage
+    id: string;
     shipName: string;
     portStart: string;
     departureDate: string;
+    portEnd: string;
+    arrivalDate?: string;
     miningLicenseNumber?: string;
     expirationDateOfMiningLicenseNumber?: string;
     type: string;

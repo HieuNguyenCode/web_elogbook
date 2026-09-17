@@ -4,7 +4,7 @@ import DatePicker, { registerLocale } from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { vi } from 'date-fns/locale/vi';
 registerLocale('vi', vi);
-import {Plus, Trash2, X} from 'lucide-react';
+import {Plus, Trash2, X, Save} from 'lucide-react';
 import {useToast} from '../../components/ToastContext';
 import type {Ship, ShipResponse} from '../../types/Ship';
 import type {CrewRoles, Occupations, Locations} from '../../types/Catalog';
@@ -1312,12 +1312,12 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
 
                     <div className="modal-footer"
                          style={{marginTop: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '16px'}}>
-                        <button type="button" className="btn btn-outline" onClick={onClose}>
-                            Đóng
+                        <button type="button" className="btn btn-outline flex items-center gap-xs" onClick={onClose}>
+                            <X size={18} /> Đóng
                         </button>
                         {!isReadOnly && (
-                            <button type="submit" className="btn btn-primary" disabled={isLoading}>
-                                {isLoading ? 'Đang lưu...' : 'Lưu thông tin'}
+                            <button type="submit" className="btn btn-primary flex items-center gap-xs" disabled={isLoading}>
+                                <Save size={18} /> {isLoading ? 'Đang lưu...' : 'Lưu thông tin'}
                             </button>
                         )}
                     </div>

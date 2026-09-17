@@ -122,7 +122,7 @@ export default function UserList() {
             }}>
                 {/* Search Bar */}
                 <div className="flex items-center justify-between flex-col-mobile gap-sm" style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)' }}>
-                    <div className="relative" style={{ width: '100%', maxWidth: '320px' }}>
+                    <div style={{ position: 'relative', width: '100%', maxWidth: '320px' }}>
                         <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                         <input 
                             type="text" 

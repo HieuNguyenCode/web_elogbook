@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import type { MiningLogDto } from '../../types/MiningLog';
@@ -20,6 +20,24 @@ L.Icon.Default.mergeOptions({
 
 interface Props {
     log: MiningLogDto;
+}
+
+
+function ResizeMap() {
+    const map = useMap();
+    useEffect(() => {
+        const timer1 = setTimeout(() => {
+            map.invalidateSize();
+        }, 100);
+        const timer2 = setTimeout(() => {
+            map.invalidateSize();
+        }, 500);
+        return () => {
+            clearTimeout(timer1);
+            clearTimeout(timer2);
+        };
+    }, [map]);
+    return null;
 }
 
 export default function VoyageMap({ log }: Props) {
@@ -93,6 +111,7 @@ export default function VoyageMap({ log }: Props) {
     return (
         <div style={{ height: '100%', width: '100%', borderRadius: '0px', overflow: 'hidden', border: 'none' }}>
             <MapContainer center={center} zoom={8} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
+                <ResizeMap />
                 <TileLayer
                     attribution='&copy; Google Maps'
                     url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
