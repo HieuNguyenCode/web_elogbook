@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Search, MapPin, X } from 'lucide-react';
+import { Search, MapPin, X , RefreshCw} from 'lucide-react';
 import type { LeavingPortsDto } from '../../types/MiningLog';
 import { listDeparturesAPI } from '../../features/API/miningLog/MiningLog';
 import { useToast } from '../../components/ToastContext';
@@ -46,20 +46,29 @@ export default function DepartureList() {
 
     return (
         <div className="flex flex-col h-full bg-white shadow-sm" style={{ borderRadius: '12px', overflow: 'hidden' }}>
-            <div className="flex items-center justify-between" style={{ padding: '20px', borderBottom: '1px solid var(--border-color)' }}>
+            <div className="flex items-center justify-between flex-col-mobile gap-sm" style={{ padding: '20px', borderBottom: '1px solid var(--border-color)' }}>
                 <div>
                     <h1 className="text-xl font-bold" style={{ color: '#0f172a', marginBottom: '4px' }}>Quản lý Tàu xuất bến</h1>
                     <p className="text-sm" style={{ color: '#64748b' }}>Theo dõi và quản lý thông tin các chuyến biển đã xuất bến</p>
                 </div>
                 
-                <div className="flex items-center gap-md">
-                    <div className="relative" style={{ display: 'flex', alignItems: 'center' }}>
+                
+                <div className="flex items-center gap-md" style={{ flexWrap: 'wrap', flex: 1, minWidth: '320px', justifyContent: 'flex-end' }}>
+                    <div className="flex items-center gap-sm">
+                        <button className="btn btn-outline flex items-center gap-sm"
+                                onClick={() => fetchDepartures(search, page)}
+                                style={{borderRadius: '8px', padding: '0 16px', fontWeight: 600, height: '40px'}}>
+                            <RefreshCw size={18}/>
+                            <span>Làm mới</span>
+                        </button>
+                    </div>
+                    <div className="relative" style={{ display: 'flex', alignItems: 'center', flex: '1 1 auto', minWidth: '250px', maxWidth: '350px' }}>
                         <Search size={18} style={{ position: 'absolute', left: '12px', color: '#94a3b8' }} />
                         <input
                             type="text"
                             className="input"
                             placeholder="Tìm kiếm biển số tàu..."
-                            style={{ paddingLeft: '2.4rem', paddingRight: search ? '2rem' : '0.8rem', width: '270px', borderRadius: '8px' }}
+                            style={{ paddingLeft: '2.4rem', paddingRight: search ? '2rem' : '0.8rem', width: '100%', height: '40px', borderRadius: '8px' }}
                             value={search}
                             onChange={handleSearchChange}
                         />
@@ -76,7 +85,7 @@ export default function DepartureList() {
             </div>
 
             <div className="table-container flex-1 flex flex-col">
-                <div style={{ flex: 1, overflowY: 'auto' }}>
+                <div style={{ flex: 1, overflowY: 'auto' }} className="table-responsive">
                     <table className="table">
                         <thead>
                             <tr>
@@ -122,11 +131,11 @@ export default function DepartureList() {
                     </table>
                 </div>
                 
-                <div className="flex items-center justify-between" style={{ padding: '12px 20px', borderTop: '1px solid var(--border-color)', backgroundColor: '#ffffff' }}>
+                <div className="flex items-center justify-between flex-col-mobile gap-sm" style={{ padding: '12px 20px', borderTop: '1px solid var(--border-color)', backgroundColor: '#ffffff' }}>
                     <div className="text-sm" style={{ color: '#64748b' }}>
                         Hiển thị <strong>{departures.length > 0 ? (page - 1) * pageSize + 1 : 0}</strong> - <strong>{Math.min(page * pageSize, totalCount)}</strong> trong tổng số <strong>{totalCount}</strong>
                     </div>
-                    {totalPages > 1 && (
+                    {true && (
                         <div className="flex items-center gap-sm">
                             <button className="btn btn-outline" style={{ padding: '0 10px', height: '32px' }} disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Trước</button>
                             <span style={{ fontSize: '13px', fontWeight: 600 }}>Trang {page} / {totalPages}</span>

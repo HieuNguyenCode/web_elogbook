@@ -158,8 +158,8 @@ export default function OwnerModal({isOpen, mode, owner, onClose, onSubmit}: Own
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit}>
-                    <div className="modal-body flex flex-col gap-md" style={{position: 'relative'}}>
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+                    <div className="modal-body flex flex-col gap-md" style={{ position: 'relative', flex: 1, overflowY: 'auto', padding: '16px' }}>
                         {isFetchingDetail && (
                             <div style={{
                                 position: 'absolute',

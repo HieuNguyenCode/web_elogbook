@@ -1,4 +1,6 @@
 import { useEffect, useState, Fragment } from 'react';
+
+import { axiosClient } from '../../utils/axiosClient';
 import { X, ChevronDown, ChevronRight } from 'lucide-react';
 import type { MiningLogDto } from '../../types/MiningLog';
 import { miningLogDetailAPI } from '../../features/API/miningLog/MiningLog';
@@ -16,7 +18,24 @@ export default function VoyageDetailModal({ isOpen, idSeaVoyage, onClose }: Prop
     const [isLoading, setIsLoading] = useState(false);
     const [expandedHauls, setExpandedHauls] = useState<number[]>([]);
     const [expandedTransshipments, setExpandedTransshipments] = useState<number[]>([]);
-    const [activeTab, setActiveTab] = useState<'info' | 'map' | 'crew' | 'log' | 'transship'>('info');
+    const [activeTab, setActiveTab] = useState<'info' | 'map' | 'crew' | 'log' | 'transship' | 'pdf'>('info');
+    const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+    const [pdfError, setPdfError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (activeTab === 'pdf' && log?.id && !pdfUrl) {
+            axiosClient.get(`/api/v2/Admin/MiningLog/DownloadPdf/${log.id}`, { responseType: 'blob' })
+                .then((res: any) => {
+                    const url = URL.createObjectURL(res);
+                    setPdfUrl(url);
+                })
+                .catch(err => {
+                    console.error('Error loading PDF:', err);
+                    setPdfError('Không thể tải file PDF. Vui lòng thử lại sau.');
+                });
+        }
+    }, [activeTab, log?.id, pdfUrl]);
+
     
     const { error: showError } = useToast();
 
@@ -83,9 +102,9 @@ export default function VoyageDetailModal({ isOpen, idSeaVoyage, onClose }: Prop
                 ) : (
                     <>
                         {/* Top Tabs */}
-                        <div className="flex" style={{ borderBottom: '1px solid #e2e8f0', overflowX: 'auto', padding: '0 24px' }}>
-                            {['Thông tin chung', 'Bản đồ', 'Thuyền viên', 'Nhật ký khai thác', 'Chuyển tải'].map(tab => {
-                                const tabMap: any = { 'Thông tin chung': 'info', 'Bản đồ': 'map', 'Thuyền viên': 'crew', 'Nhật ký khai thác': 'log', 'Chuyển tải': 'transship' };
+                        <div className="flex modal-tabs-p" style={{ borderBottom: '1px solid #e2e8f0', overflowX: 'auto' }}>
+                            {['Thông tin chung', 'Bản đồ', 'Thuyền viên', 'Nhật ký khai thác', 'Chuyển tải', 'File PDF'].map(tab => {
+                                const tabMap: any = { 'Thông tin chung': 'info', 'Bản đồ': 'map', 'Thuyền viên': 'crew', 'Nhật ký khai thác': 'log', 'Chuyển tải': 'transship', 'File PDF': 'pdf' };
                                 const tabKey = tabMap[tab];
                                 const isActive = activeTab === tabKey;
                                 return (
@@ -111,8 +130,8 @@ export default function VoyageDetailModal({ isOpen, idSeaVoyage, onClose }: Prop
                         {/* Content Area */}
                         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
                             {activeTab === 'info' && (
-                                <div style={{ padding: '24px' }}>
-                                    <div className="grid grid-cols-2 gap-md">
+                                <div className="modal-body-p">
+                                    <div className="responsive-grid-2 gap-md">
                                         <div style={{ backgroundColor: '#f8fafc', padding: '20px', borderRadius: '8px' }}>
                                             <h3 className="font-semibold text-lg" style={{ color: '#0f172a', marginBottom: '16px', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>Thông tin tàu & Chủ tàu</h3>
                                             <div className="flex flex-col gap-xs text-sm">
@@ -253,7 +272,7 @@ export default function VoyageDetailModal({ isOpen, idSeaVoyage, onClose }: Prop
                             )}
 
                             {activeTab === 'crew' && (
-                                <div style={{ padding: '24px' }}>
+                                <div className="modal-body-p">
                                     {log?.crew && log.crew.length > 0 ? (
                                         <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                                             <thead>
@@ -299,7 +318,7 @@ export default function VoyageDetailModal({ isOpen, idSeaVoyage, onClose }: Prop
                             )}
 
                             {activeTab === 'log' && (
-                                <div style={{ padding: '24px' }}>
+                                <div className="modal-body-p">
                                     <div className="table-container">
                                         <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                                             <thead style={{ backgroundColor: '#f8fafc' }}>
@@ -374,7 +393,7 @@ export default function VoyageDetailModal({ isOpen, idSeaVoyage, onClose }: Prop
                             )}
 
                             {activeTab === 'transship' && (
-                                <div style={{ padding: '24px' }}>
+                                <div className="modal-body-p">
                                     <div className="table-container">
                                         <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                                             <thead style={{ backgroundColor: '#f8fafc' }}>
@@ -445,11 +464,27 @@ export default function VoyageDetailModal({ isOpen, idSeaVoyage, onClose }: Prop
                                     </div>
                                 </div>
                             )}
+                        
+                            {activeTab === 'pdf' && (
+                                <div className="flex flex-col" style={{ padding: 0, flex: 1, height: '100%' }}>
+                                    {pdfUrl ? (
+        <iframe 
+            src={pdfUrl}
+            style={{ width: '100%', height: '100%', minHeight: '75vh', border: 'none' }}
+            title="PDF Viewer"
+        />
+    ) : pdfError ? (
+        <div style={{ padding: '20px', color: 'red', textAlign: 'center' }}>{pdfError}</div>
+    ) : (
+        <div style={{ padding: '20px', textAlign: 'center' }}>Đang tải PDF...</div>
+    )}
+                                </div>
+                            )}
+
                         </div>
                     </>
                 )}
             </div>
         </div>
     );
-
 }

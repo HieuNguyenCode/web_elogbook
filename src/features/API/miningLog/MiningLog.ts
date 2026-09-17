@@ -52,3 +52,10 @@ export const listPortsAPI = async (): Promise<any[]> => {
         return [];
     }
 };
+
+export const downloadMiningLogPdfAPI = async (idSeaVoyage: string): Promise<Blob> => {
+    const data = await axiosClient.get(`/api/v2/Admin/MiningLog/DownloadPdf/${idSeaVoyage}`, {
+        responseType: 'blob'
+    });
+    return data as unknown as Blob;
+};

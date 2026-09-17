@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { 
+    Menu,
     LayoutDashboard, 
     Ship, 
     Anchor, 
@@ -21,6 +22,7 @@ export default function MainLayout() {
     const [isShipProfileExpanded, setIsShipProfileExpanded] = useState(isShipProfileRoute);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const [userRole, setUserRole] = useState<string | null>(null);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(() => {
         setUserRole(getUserRole());
@@ -28,6 +30,7 @@ export default function MainLayout() {
 
     // Khi người dùng chuyển sang các tab khác ngoài Hồ sơ tàu, tự động thu gọn 2 tab con lại
     useEffect(() => {
+        setIsSidebarOpen(false);
         if (isShipProfileRoute) {
             setIsShipProfileExpanded(true);
         } else {
@@ -54,8 +57,21 @@ export default function MainLayout() {
 
     return (
         <div className="layout-container flex h-full">
+            {/* Mobile Header */}
+            <div className="mobile-header">
+                <div className="flex items-center gap-sm">
+                    <Anchor size={20} color="#60a5fa" />
+                    <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>SEADIARY</span>
+                </div>
+                <button className="mobile-menu-btn" onClick={() => setIsSidebarOpen(true)}>
+                    <Menu size={24} />
+                </button>
+            </div>
+
+            {/* Sidebar Overlay */}
+            <div className={`sidebar-overlay ${isSidebarOpen ? 'open' : ''}`} onClick={() => setIsSidebarOpen(false)}></div>
             {/* Sidebar */}
-            <aside className="sidebar">
+            <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
                 <div className="sidebar-header flex items-center gap-sm">
                     <div className="sidebar-logo-badge">
                         <Anchor size={22} color="#ffffff" />
@@ -139,7 +155,7 @@ export default function MainLayout() {
             {/* Main Content Area */}
             <main className="main-content">
                 <div className="page-content">
-                    <div className="card h-full flex flex-col" style={{ padding: '20px 24px', overflow: 'hidden' }}>
+                    <div className="card main-card h-full flex flex-col">
                         <Outlet />
                     </div>
                 </div>

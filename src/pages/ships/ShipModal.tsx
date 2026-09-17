@@ -467,14 +467,8 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit}>
-                    <div className="modal-body flex flex-col" style={{
-                        position: 'relative',
-                        maxHeight: '72vh',
-                        overflowY: 'auto',
-                        padding: '16px 20px',
-                        backgroundColor: '#f8fafc'
-                    }}>
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+                    <div className="modal-body flex flex-col" style={{ position: 'relative', flex: 1, overflowY: 'auto', padding: '16px 20px', backgroundColor: '#f8fafc' }}>
                         {isFetchingDetail && (
                             <div style={{
                                 position: 'absolute',

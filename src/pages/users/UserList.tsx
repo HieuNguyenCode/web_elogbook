@@ -121,8 +121,8 @@ export default function UserList() {
                 overflow: 'hidden'
             }}>
                 {/* Search Bar */}
-                <div className="flex items-center justify-between" style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)' }}>
-                    <div className="relative" style={{ width: '320px' }}>
+                <div className="flex items-center justify-between flex-col-mobile gap-sm" style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)' }}>
+                    <div className="relative" style={{ width: '100%', maxWidth: '320px' }}>
                         <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                         <input 
                             type="text" 
@@ -234,7 +234,7 @@ export default function UserList() {
                 </div>
 
                 {/* Footer status bar */}
-                <div className="flex items-center justify-between" style={{ padding: '12px 20px', borderTop: '1px solid var(--border-color)', backgroundColor: '#ffffff' }}>
+                <div className="flex items-center justify-between flex-col-mobile gap-sm" style={{ padding: '12px 20px', borderTop: '1px solid var(--border-color)', backgroundColor: '#ffffff' }}>
                     <div className="text-sm" style={{ color: '#64748b' }}>
                         Hiển thị <strong>{filteredUsers.length}</strong> người dùng
                     </div>

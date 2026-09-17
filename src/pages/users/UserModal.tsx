@@ -104,7 +104,7 @@ export default function UserModal({ isOpen, user, onClose, onSuccess }: Props) {
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
                     <div className="modal-body flex flex-col gap-md">
                         <div>
                             <label className="form-label" style={{ display: 'block', fontSize: '14px', marginBottom: '6px', fontWeight: 500, color: '#334155' }}>

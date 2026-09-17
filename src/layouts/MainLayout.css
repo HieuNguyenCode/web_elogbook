@@ -171,3 +171,72 @@ button.nav-item {
     overflow-y: auto;
     background-color: #f8fafc;
 }
+
+/* --- Mobile Responsive Navigation --- */
+.mobile-header {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background-color: #0f172a;
+    color: white;
+    z-index: 30;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.mobile-menu-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+}
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 40;
+}
+
+@media (max-width: 768px) {
+    .layout-container {
+        flex-direction: column !important;
+    }
+    
+    .mobile-header {
+        display: flex;
+    }
+
+    .sidebar {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        bottom: 0;
+        z-index: 50;
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 2px 0 12px rgba(0, 0, 0, 0.5);
+    }
+    
+    .sidebar.open {
+        left: 0;
+    }
+    
+    .sidebar-overlay.open {
+        display: block;
+        animation: fadeIn 0.3s ease-out;
+    }
+}
+
+.main-card { padding: 20px 24px; overflow: hidden; }
+@media (max-width: 768px) {
+    .page-content { padding: 0.5rem !important; }
+    .main-card { padding: 0.75rem !important; border-radius: 8px; }
+}

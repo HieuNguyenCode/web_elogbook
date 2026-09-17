@@ -161,14 +161,29 @@ export default function OwnerList() {
                         {totalCount} chủ tàu
                     </span>
                 </div>
-                <div className="flex items-center gap-md">
-                    <button className="btn btn-outline flex items-center gap-sm"
-                            onClick={() => fetchOwners(search, page)}
-                            style={{borderRadius: '8px', padding: '0 16px', fontWeight: 600}}>
-                        <RefreshCw size={18}/>
-                        <span>Làm mới</span>
-                    </button>
-                    <div style={{position: 'relative'}}>
+                
+                <div className="flex items-center gap-md" style={{ flexWrap: 'wrap', flex: 1, minWidth: '320px' }}>
+                    {/* Nút thao tác gom vào 1 nhóm để trên đt nằm cùng 1 dòng */}
+                    <div className="flex items-center gap-sm">
+                        <button className="btn btn-outline flex items-center gap-sm"
+                                onClick={() => fetchOwners(search, page)}
+                                style={{borderRadius: '8px', padding: '0 16px', fontWeight: 600, height: '40px'}}>
+                            <RefreshCw size={18}/>
+                            <span>Làm mới</span>
+                        </button>
+                        
+                        {userRole === 'ADMIN' && (
+                            <button className="btn btn-primary flex items-center gap-sm"
+                                onClick={() => handleOpenModal('create')}
+                                style={{borderRadius: '8px', padding: '0 16px', fontWeight: 600, height: '40px'}}>
+                                <Plus size={18}/>
+                                <span>Thêm chủ tàu</span>
+                            </button>
+                        )}
+                    </div>
+                    
+                    {/* Ô tìm kiếm tự động giãn rộng (flex-1) hoặc xuống dòng nếu chật */}
+                    <div style={{position: 'relative', flex: '1 1 auto', minWidth: '250px'}}>
                         <Search
                             size={17}
                             style={{
@@ -186,7 +201,8 @@ export default function OwnerList() {
                             style={{
                                 paddingLeft: '2.4rem',
                                 paddingRight: search ? '2rem' : '0.8rem',
-                                width: '270px',
+                                width: '100%',
+                                height: '40px',
                                 borderRadius: '8px'
                             }}
                             value={search}
@@ -216,14 +232,6 @@ export default function OwnerList() {
                             </button>
                         )}
                     </div>
-                    {userRole === 'ADMIN' && (
-                        <button className="btn btn-primary flex items-center gap-sm"
-                            onClick={() => handleOpenModal('create')}
-                            style={{borderRadius: '8px', padding: '0 16px', fontWeight: 600}}>
-                        <Plus size={18}/>
-                        <span>Thêm chủ tàu</span>
-                    </button>
-                    )}
                 </div>
             </div>
 
@@ -243,7 +251,7 @@ export default function OwnerList() {
 
             {/* Data Table */}
             <div className="table-container flex-1 flex flex-col">
-                <div style={{flex: 1, overflowY: 'auto'}}>
+                <div style={{flex: 1, overflowY: 'auto'}} className="table-responsive">
                     <table className="table">
                         <thead>
                         <tr>
@@ -401,7 +409,7 @@ export default function OwnerList() {
                 </div>
 
                 {/* Pagination Footer */}
-                <div className="flex items-center justify-between" style={{
+                <div className="flex items-center justify-between flex-col-mobile gap-sm" style={{
                     padding: '12px 20px',
                     borderTop: '1px solid var(--border-color)',
                     backgroundColor: '#ffffff'
@@ -411,7 +419,7 @@ export default function OwnerList() {
                         thị <strong>{owners.length > 0 ? (page - 1) * 10 + 1 : 0}</strong> - <strong>{Math.min(page * 10, totalCount)}</strong> trong
                         tổng số <strong>{totalCount}</strong> chủ tàu
                     </div>
-                    {totalPages > 1 && (
+                    {true && (
                         <div className="flex items-center gap-sm">
                             <button
                                 className="btn btn-outline"
