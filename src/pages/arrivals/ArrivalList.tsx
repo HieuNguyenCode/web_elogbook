@@ -175,7 +175,7 @@ export default function ArrivalList() {
                 </div>
             </div>
 
-            <VoyageDetailModal 
+            <VoyageDetailModal key={selectedVoyage || 'empty'} 
                 isOpen={!!selectedVoyage} 
                 idSeaVoyage={selectedVoyage} 
                 onClose={() => setSelectedVoyage(null)}

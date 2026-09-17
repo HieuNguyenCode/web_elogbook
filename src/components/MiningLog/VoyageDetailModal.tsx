@@ -34,9 +34,15 @@ export default function VoyageDetailModal({ isOpen, idSeaVoyage, onClose }: Prop
     const [activeTab, setActiveTab] = useState<'info' | 'map' | 'crew' | 'log' | 'transship' | 'pdf'>('info');
     const [pdfUrl, setPdfUrl] = useState<string | null>(null);
     const [pdfError, setPdfError] = useState<string | null>(null);
+    
+    useEffect(() => {
+        setPdfUrl(null);
+        setPdfError(null);
+    }, [idSeaVoyage]);
 
     useEffect(() => {
         if (activeTab === 'pdf' && log?.id && !pdfUrl) {
+            console.log('Fetching new PDF for:', log.id);
             axiosClient.get(`/api/v2/Admin/MiningLog/DownloadPdf/${log.id}`, { responseType: 'blob' })
                 .then((res: any) => {
                     const url = URL.createObjectURL(new Blob([res], { type: 'application/pdf' }));
@@ -69,6 +75,8 @@ export default function VoyageDetailModal({ isOpen, idSeaVoyage, onClose }: Prop
                 setExpandedHauls([]);
                 setExpandedTransshipments([]);
                 setActiveTab('info');
+                setPdfUrl(null);
+                setPdfError(null);
             }, 0);
         }
 
