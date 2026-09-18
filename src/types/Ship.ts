@@ -11,6 +11,7 @@ export interface Ship {
     shipOwner?: { id?: string; fullName?: string };
     ShipOwner?: { id?: string; fullName?: string };
     idshipOwner?: string;
+    status?: string;
     [key: string]: unknown;
 }
 
@@ -52,6 +53,7 @@ export interface ShipResponse {
     mainOccupationId: string;
     secondaryOccupationId1?: string;
     secondaryOccupationId2?: string;
+    status?: string;
     // Backend variations / populated fields
     id?: string;
     crew?: ShipResponse['crews'];

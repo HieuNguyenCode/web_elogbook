@@ -311,6 +311,7 @@ export default function ShipList() {
                             <th style={{minWidth: '200px'}}>Tên tàu / Biển số</th>
                             <th style={{minWidth: '150px'}}>Serial Thiết bị</th>
                             <th style={{minWidth: '180px'}}>Chủ tàu</th>
+                            <th style={{minWidth: '140px', textAlign: 'center'}}>Trạng thái</th>
 
                             <th style={{width: '130px', textAlign: 'center'}}>Thao tác</th>
                         </tr>
@@ -318,7 +319,7 @@ export default function ShipList() {
                         <tbody>
                         {isLoading ? (
                             <tr>
-                                <td colSpan={5} className="text-center text-muted" style={{padding: '3.5rem'}}>
+                                <td colSpan={6} className="text-center text-muted" style={{padding: '3.5rem'}}>
                                     <div className="flex flex-col items-center justify-center gap-sm">
                                         <div style={{
                                             width: '28px',
@@ -334,7 +335,7 @@ export default function ShipList() {
                             </tr>
                         ) : ships.length === 0 ? (
                             <tr>
-                                <td colSpan={5} className="text-center text-muted" style={{padding: '3.5rem'}}>
+                                <td colSpan={6} className="text-center text-muted" style={{padding: '3.5rem'}}>
                                     {search ? 'Không tìm thấy kết quả phù hợp với từ khóa.' : 'Chưa có dữ liệu tàu nào.'}
                                 </td>
                             </tr>
@@ -398,6 +399,29 @@ export default function ShipList() {
                                             )}
                                         </td>
 
+                                        <td className="text-center">
+                                            {ship.status === 'DEACTIVATED' ? (
+                                                <span style={{
+                                                    fontSize: '12px',
+                                                    fontWeight: 500,
+                                                    color: '#ef4444',
+                                                    backgroundColor: '#fee2e2',
+                                                    padding: '4px 8px',
+                                                    borderRadius: '6px',
+                                                    display: 'inline-block'
+                                                }}>Ngừng hoạt động</span>
+                                            ) : (
+                                                <span style={{
+                                                    fontSize: '12px',
+                                                    fontWeight: 500,
+                                                    color: '#10b981',
+                                                    backgroundColor: '#d1fae5',
+                                                    padding: '4px 8px',
+                                                    borderRadius: '6px',
+                                                    display: 'inline-block'
+                                                }}>Đang hoạt động</span>
+                                            )}
+                                        </td>
                                         <td>
                                             <div className="flex items-center justify-center gap-xs">
                                                 <button

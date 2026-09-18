@@ -127,7 +127,7 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                     setIsFetchingDetail(false);
                 });
         } else if (isOpen && mode === 'create') {
-            setTimeout(() => setFormData({name: "", serial: "", deviceSerial: "", crews: []}), 0);
+            setTimeout(() => setFormData({name: "", serial: "", deviceSerial: "", status: "ACTIVATED", crews: []}), 0);
         }
 
         setTimeout(() => setMainError(null), 0);
@@ -228,6 +228,7 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                 name: formData.name || "-",
                 serial: formData.serial || "-",
                 idshipOwner: formData.idshipOwner || "00000000-0000-0000-0000-000000000000",
+                status: formData.status || "ACTIVATED",
                 mainOccupationId: formData.mainOccupationId || "00000000-0000-0000-0000-000000000000",
                 lengthOverall: formData.lengthOverall ? Number(formData.lengthOverall) : 0,
                 totalPower: formData.totalPower ? Number(formData.totalPower) : 0,
@@ -622,6 +623,21 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                                             {getError('serial')}
                                         </span>
                                     )}
+                                </div>
+                                
+                                <div>
+                                    <label style={labelStyle}>Trạng thái hoạt động (*)</label>
+                                    <select
+                                        name="status"
+                                        value={formData.status || 'ACTIVATED'}
+                                        onChange={(e) => setFormData(prev => ({...prev, status: e.target.value}))}
+                                        className="input"
+                                        disabled={isReadOnly}
+                                        style={isReadOnly ? readOnlyStyle : controlStyle}
+                                    >
+                                        <option value="ACTIVATED">Đang hoạt động (ACTIVATED)</option>
+                                        <option value="DEACTIVATED">Ngừng hoạt động (DEACTIVATED)</option>
+                                    </select>
                                 </div>
                                 
                                 <div>
