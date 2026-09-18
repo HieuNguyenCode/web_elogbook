@@ -17,12 +17,10 @@ import {getAgencyUsersAPI} from '../../features/API/user/UserAPI.ts';
 import {listShipOwnerAPI, shipOwnerDetailAPI} from '../../features/API/shipOwner/ShipOwner.ts';
 import {
     formatToDDMMYYYY,
-    getCrewBirthDate,
     getOwnerBirthDate,
     parseDDMMYYYYToISO,
     parseToDate,
-    saveCrewBirthDate
-} from '../../utils/dateUtils.ts';
+    } from '../../utils/dateUtils.ts';
 
 type ModalMode = 'view' | 'create' | 'edit';
 
@@ -108,16 +106,10 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                         idlocations: fullShip.idlocations || fullShip.location?.id,
                         installationDate: formatToDDMMYYYY(fullShip.installationDate),
                         expirationDateOfMiningLicenseNumber: formatToDDMMYYYY(fullShip.expirationDateOfMiningLicenseNumber),
-                        crews: (fullShip.crews || fullShip.crew || []).map((c: ShipResponse["crews"][0], idx: number) => {
-                            const shipKey = fullShip.id || ship.id || fullShip.serial || '';
+                        crews: (fullShip.crews || fullShip.crew || []).map((c: ShipResponse["crews"][0]) => {
+                            
                             const rawDob = c.birthDate || c.dateOfBirth || c.dob || c.birthday || c.BirthDate || c.DateOfBirth;
-                            const crewDob = getCrewBirthDate({
-                                id: c.id,
-                                citizenId: c.citizenId,
-                                fullName: c.fullName,
-                                shipIdentifier: shipKey,
-                                index: idx
-                            }, rawDob);
+                            const crewDob = formatToDDMMYYYY(rawDob);
                             return {
                                 ...c,
                                 birthDate: crewDob,
@@ -264,21 +256,7 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
             strictPayload.fishingGearSpecifications = fishingGear;
 
 
-            // Lưu cache ngày sinh thuyền viên
-            if (formData.crews) {
-                const shipKey = ship?.id || formData.serial || '';
-                formData.crews.forEach((c: ShipResponse["crews"][0], idx: number) => {
-                    if (c.birthDate) {
-                        saveCrewBirthDate({
-                            id: c.id,
-                            citizenId: c.citizenId,
-                            fullName: c.fullName,
-                            shipIdentifier: shipKey,
-                            index: idx
-                        }, c.birthDate);
-                    }
-                });
-            }
+            
 
             // Dọn dẹp danh sách thuyền viên chuẩn theo UpdateCrewDto
             strictPayload.crews = ((formData.crews || []).map((c: ShipResponse["crews"][0]) => {
@@ -291,7 +269,12 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                 if (c.phone) cleanedCrew.phone = c.phone;
                 if (c.email) cleanedCrew.email = c.email;
                 if (c.address) cleanedCrew.address = c.address;
-                // KHÔNG GỬI birthDate hay dateOfBirth vì backend không có trường này trong UpdateCrewDto
+                
+                // Backend ĐÃ cập nhật UpdateCrewDto và hỗ trợ dateOfBirth (định dạng ISO)
+                if (c.birthDate) {
+                    cleanedCrew.dateOfBirth = parseDDMMYYYYToISO(c.birthDate);
+                }
+
                 return cleanedCrew as unknown as ShipResponse["crews"][0];
             }));
 
@@ -1148,12 +1131,7 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                                                             onChange={e => {
                                                                 const newCid = e.target.value;
                                                                 handleUpdateCrew(idx, 'citizenId', newCid);
-                                                                if (!member.birthDate && newCid.trim()) {
-                                                                    const autoDob = getCrewBirthDate({citizenId: newCid.trim()});
-                                                                    if (autoDob) {
-                                                                        handleUpdateCrew(idx, 'birthDate', autoDob);
-                                                                    }
-                                                                }
+                                                                
                                                             }}
                                                             placeholder="Số CCCD"
                                                         />
@@ -1177,15 +1155,7 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                                                                     next = `${day}/${month}/${year}`;
                                                                 }
                                                                 handleUpdateCrew(idx, 'birthDate', next);
-                                                                if (next.length === 10) {
-                                                                    saveCrewBirthDate({
-                                                                        id: member.id,
-                                                                        citizenId: member.citizenId,
-                                                                        fullName: member.fullName,
-                                                                        shipIdentifier: ship?.id || formData.serial || '',
-                                                                        index: idx
-                                                                    }, next);
-                                                                }
+                                                                
                                                             }}
                                                             dateFormat="dd/MM/yyyy"
                                                             placeholderText="dd/MM/yyyy"
