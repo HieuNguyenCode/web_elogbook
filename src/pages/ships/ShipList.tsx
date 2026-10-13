@@ -25,6 +25,14 @@ import { getUserRole } from '../../utils/jwt';
 
 type ModalMode = 'view' | 'create' | 'edit';
 
+const isShipDeactivated = (ship: Ship): boolean => {
+    const raw = ship.status ?? (ship as any).Status;
+    if (raw === undefined || raw === null) return false;
+    if (typeof raw === 'boolean') return !raw;
+    const str = String(raw).trim().toUpperCase();
+    return str === 'DEACTIVATED' || str === 'INACTIVE' || str === 'NGUNG_HOAT_DONG' || str === '0' || str === 'FALSE';
+};
+
 export default function ShipList() {
     const [ships, setShips] = useState<Ship[]>([]);
     const [ownersList, setOwnersList] = useState<ShipOwner[]>([]);
@@ -56,8 +64,10 @@ export default function ShipList() {
 
             // Khởi tạo danh sách tàu ngay lập tức, kết hợp với các dữ liệu đã lưu trong cache
             const initialized = fetched.map(s => {
+                const rawStatus = s.status ?? (s as any).Status;
                 return {
                     ...s,
+                    status: rawStatus,
                     ownerName: (s as Ship & {
                         shipOwner?: { fullName?: string },
                         ShipOwner?: { fullName?: string },
@@ -77,21 +87,23 @@ export default function ShipList() {
             setTotalPages(response.totalPages || 1);
             setTotalCount(response.totalCount || 0);
 
-            // Tự động tải chi tiết trong nền đối với các tàu trên trang hiện tại để nạp số Serial thiết bị và Tên chủ tàu
+            // Tự động tải chi tiết trong nền đối với các tàu trên trang hiện tại để nạp số Serial thiết bị, Tên chủ tàu và Trạng thái
             Promise.allSettled(
                 initialized.map(async (s) => {
                     try {
                         const detail: ShipResponse = await shipDetailAPI(s.id);
                         if (detail) {
-                            const shipSerial = detail.serial || '';
-                            const devSerial = detail.deviceSerial || '';
+                            const shipSerial = detail.serial || (detail as any).Serial || '';
+                            const devSerial = detail.deviceSerial || (detail as any).DeviceSerial || '';
                             const ownerName = detail.shipOwner?.fullName || detail.ShipOwner?.fullName || detail.shipOwnerName || '';
+                            const detailStatus = detail.status ?? (detail as any).Status;
                             return {
                                 id: s.id,
                                 serial: shipSerial,
                                 deviceSerial: devSerial,
                                 ownerName: ownerName,
-                                idshipOwner: detail.idshipOwner
+                                idshipOwner: detail.idshipOwner,
+                                status: detailStatus
                             };
                         }
                     } catch { /* ignore */
@@ -108,7 +120,8 @@ export default function ShipList() {
                                 serial?: string;
                                 deviceSerial?: string;
                                 ownerName?: string;
-                                idshipOwner?: string
+                                idshipOwner?: string;
+                                status?: string;
                             };
                             const owner = val.ownerName || (val.idshipOwner ? ownersList.find(o => o.id === val.idshipOwner)?.fullName : undefined);
                             return {
@@ -119,7 +132,8 @@ export default function ShipList() {
                                     shipOwner?: { fullName?: string },
                                     ShipOwner?: { fullName?: string },
                                     shipOwnerName?: string
-                                }).ownerName
+                                }).ownerName,
+                                status: val.status !== undefined ? val.status : (s.status ?? (s as any).Status)
                             };
                         }
                         return s;
@@ -400,7 +414,7 @@ export default function ShipList() {
                                         </td>
 
                                         <td className="text-center">
-                                            {ship.status === 'DEACTIVATED' ? (
+                                            {isShipDeactivated(ship) ? (
                                                 <span style={{
                                                     fontSize: '12px',
                                                     fontWeight: 500,

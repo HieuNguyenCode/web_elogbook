@@ -89,6 +89,9 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
         }
 
         if (isOpen && ship && mode !== 'create') {
+            const initialStatusRaw = (ship as any).status ?? (ship as any).Status;
+            const initialStatus = initialStatusRaw ? (String(initialStatusRaw).trim().toUpperCase() === 'DEACTIVATED' ? 'DEACTIVATED' : 'ACTIVATED') : 'ACTIVATED';
+            setTimeout(() => setFormData({ status: initialStatus }), 0);
             setTimeout(() => setIsFetchingDetail(true), 0);
             shipDetailAPI(ship.id)
                 .then((fullShip: ShipResponse) => {
@@ -96,8 +99,11 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                     if (devSerial && ship?.id) {
                         localStorage.setItem(`ship_device_serial_${ship.id}`, devSerial);
                     }
+                    const rawStatus = fullShip.status ?? (fullShip as any).Status ?? ship.status ?? (ship as any).Status;
+                    const normalizedStatus = rawStatus ? (String(rawStatus).trim().toUpperCase() === 'DEACTIVATED' ? 'DEACTIVATED' : 'ACTIVATED') : 'ACTIVATED';
                     const mappedData: Partial<ShipResponse> = {
                         ...fullShip,
+                        status: normalizedStatus,
                         mainOccupationId: fullShip.mainOccupationId || fullShip.mainOccupation?.id || fullShip.MainOccupation?.id || '',
                         secondaryOccupationId1: fullShip.secondaryOccupationId1 || fullShip.secondaryOccupation1?.id || fullShip.SecondaryOccupation1?.id || '',
                         secondaryOccupationId2: fullShip.secondaryOccupationId2 || fullShip.secondaryOccupation2?.id || fullShip.SecondaryOccupation2?.id || '',
