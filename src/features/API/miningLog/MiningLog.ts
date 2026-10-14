@@ -1,5 +1,5 @@
 import { axiosClient } from '../../../utils/axiosClient';
-import type { LeavingPortsDto, ArrivingPortsDto, MiningLogDto } from '../../../types/MiningLog';
+import type { LeavingPortsDto, ArrivingPortsDto, MiningLogDto, MiningLogBatchesData } from '../../../types/MiningLog';
 
 export const listDeparturesAPI = async (
     search?: string,
@@ -44,6 +44,20 @@ export const miningLogDetailAPI = async (idSeaVoyage: string): Promise<MiningLog
     return data.data;
 };
 
+export const miningLogBatchesAPI = async (idSeaVoyage: string): Promise<MiningLogBatchesData | null> => {
+    try {
+        const data = await axiosClient.get<any, any>(`/api/v2/Admin/MiningLog/${idSeaVoyage}/Batches`);
+        return data.data || null;
+    } catch (err) {
+        return null;
+    }
+};
+
+export const miningLogDetailByBatchAPI = async (idSeaVoyage: string, numberBatch: number): Promise<MiningLogDto> => {
+    const data = await axiosClient.get<any, any>(`/api/v2/Admin/MiningLog/${idSeaVoyage}/${numberBatch}`);
+    return data.data;
+};
+
 export const listPortsAPI = async (): Promise<any[]> => {
     try {
         const data = await axiosClient.get<any, any>('/api/v2/Catalog/Ports');
@@ -53,8 +67,10 @@ export const listPortsAPI = async (): Promise<any[]> => {
     }
 };
 
-export const downloadMiningLogPdfAPI = async (idSeaVoyage: string): Promise<Blob> => {
-    const data = await axiosClient.get(`/api/v2/Admin/MiningLog/DownloadPdf/${idSeaVoyage}`, {
+export const downloadMiningLogPdfAPI = async (idSeaVoyage: string, numberBatch?: number): Promise<Blob> => {
+    const batch = (numberBatch !== undefined && numberBatch !== null) ? numberBatch : 0;
+    const url = `/api/v2/Admin/MiningLog/DownloadPdf/${idSeaVoyage}/${batch}`;
+    const data = await axiosClient.get(url, {
         responseType: 'blob'
     });
     return data as unknown as Blob;

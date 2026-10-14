@@ -791,3 +791,122 @@ button, input, select, textarea {
         min-height: 350px;
     }
 }
+
+/* VoyageDetailModal Mobile Optimizations */
+.voyage-modal-container {
+    width: 90vw;
+    max-width: 1400px;
+    height: 85vh;
+    min-height: 600px;
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.voyage-header-selector-desktop {
+    display: flex;
+}
+
+.voyage-header-selector-mobile {
+    display: none;
+}
+
+.voyage-modal-tabs {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+.voyage-modal-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.voyage-pdf-actions-mobile {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .voyage-modal-container {
+        width: 100vw !important;
+        height: 100% !important;
+        max-width: 100vw !important;
+        max-height: 100% !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        min-height: 0 !important;
+    }
+
+    .modal-overlay {
+        padding: 0 !important;
+    }
+
+    .voyage-header-selector-desktop {
+        display: none !important;
+    }
+
+    .voyage-header-selector-mobile {
+        display: flex !important;
+    }
+
+    .voyage-tab-button {
+        padding: 12px 14px !important;
+        font-size: 13px !important;
+    }
+
+    .voyage-info-card {
+        padding: 14px 16px !important;
+    }
+
+    .voyage-warning-btn {
+        width: 100% !important;
+        justify-content: center !important;
+        margin-top: 4px;
+    }
+
+    .voyage-pdf-actions-mobile {
+        display: flex !important;
+    }
+
+    .voyage-pdf-header-desktop {
+        display: none !important;
+    }
+}
+
+@media (min-width: 769px) {
+    .voyage-header-selector-mobile {
+        display: none !important;
+    }
+    .voyage-header-selector-desktop {
+        display: flex !important;
+    }
+    .voyage-pdf-actions-mobile {
+        display: none !important;
+    }
+    .voyage-pdf-header-desktop {
+        display: flex !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .voyage-batch-actions {
+        width: 100% !important;
+        margin-top: 10px !important;
+        display: flex !important;
+        gap: 8px !important;
+    }
+    .voyage-batch-actions button,
+    .voyage-batch-actions a {
+        flex: 1 !important;
+        justify-content: center !important;
+        height: 36px !important;
+    }
+    .voyage-timeline-node {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 12px !important;
+    }
+    .voyage-timeline-card {
+        padding: 12px 14px !important;
+    }
+}
+

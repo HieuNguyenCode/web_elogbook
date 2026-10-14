@@ -130,3 +130,17 @@ export interface MiningLogDto {
     rareFishReports?: RarefishreportDto[];
     crew?: CrewDto[];
 }
+
+export interface MiningLogBatchItem {
+    numberBatch: number;
+    title: string;
+    changedAt: string;
+    isCurrent: boolean;
+    totalChanges: number;
+}
+
+export interface MiningLogBatchesData {
+    totalUpdates: number;
+    currentBatch: number;
+    batches: MiningLogBatchItem[];
+}

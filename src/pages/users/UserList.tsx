@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Pencil, Trash2, Search, User, AlertCircle, RefreshCw } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, User, AlertCircle, RefreshCw, MapPin } from 'lucide-react';
 import { getAllUsersAPI, deleteUserAPI } from '../../features/API/user/UserAPI';
 import type { UserDto } from '../../features/API/user/UserAPI';
+import { LocationsAPI } from '../../features/API/catalog/Catalog';
+import type { Locations } from '../../types/Catalog';
 import { useToast } from '../../components/ToastContext';
 import ConfirmModal from '../../components/ConfirmModal';
 import UserModal from './UserModal';
@@ -9,6 +11,7 @@ import { getUserRole } from '../../utils/jwt';
 
 export default function UserList() {
     const [users, setUsers] = useState<UserDto[]>([]);
+    const [locationsMap, setLocationsMap] = useState<Record<string, string>>({});
     const [isLoading, setIsLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -38,6 +41,17 @@ export default function UserList() {
     useEffect(() => {
         if (isAdmin) {
             void fetchUsers();
+            LocationsAPI().then(res => {
+                const list = Array.isArray(res) ? res : (res as any)?.data || res;
+                if (Array.isArray(list)) {
+                    const map: Record<string, string> = {};
+                    list.forEach((l: Locations) => {
+                        if (l.code) map[l.code] = l.name;
+                        if (l.id) map[l.id] = l.name;
+                    });
+                    setLocationsMap(map);
+                }
+            }).catch(() => {});
         }
     }, [isAdmin]);
 
@@ -60,11 +74,17 @@ export default function UserList() {
     const filteredUsers = useMemo(() => {
         if (!search.trim()) return users;
         const lowerSearch = search.toLowerCase();
-        return users.filter(u => 
-            u.fullName.toLowerCase().includes(lowerSearch) || 
-            u.userName.toLowerCase().includes(lowerSearch)
-        );
-    }, [users, search]);
+        return users.filter(u => {
+            const fName = (u.fullName || (u as any).FullName || '').toLowerCase();
+            const uName = (u.userName || (u as any).UserName || '').toLowerCase();
+            const rName = (u.role || (u as any).Role || '').toLowerCase();
+            const locs = (u.locations || u.Locations || []).map(l => (locationsMap[l] || l).toLowerCase());
+            return fName.includes(lowerSearch) || 
+                   uName.includes(lowerSearch) || 
+                   rName.includes(lowerSearch) ||
+                   locs.some(loc => loc.includes(lowerSearch));
+        });
+    }, [users, search, locationsMap]);
 
     if (!isAdmin) {
         return (
@@ -176,33 +196,70 @@ export default function UserList() {
                                     </td>
                                 </tr>
                             ) : (
-                                filteredUsers.map((user, index) => (
-                                    <tr key={user.id} className="hover:bg-slate-50" style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.2s' }}>
-                                        <td className="text-center" style={{ color: '#64748b', fontSize: '13.5px' }}>{index + 1}</td>
-                                        <td>
-                                            <div className="font-semibold" style={{ color: '#0f172a', fontSize: '14px' }}>
-                                                {user.fullName}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div style={{ color: '#334155', fontSize: '14px' }}>
-                                                {user.userName}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span style={{ 
-                                                display: 'inline-block',
-                                                padding: '4px 10px', 
-                                                borderRadius: '6px', 
-                                                fontSize: '12px', 
-                                                fontWeight: 600,
-                                                backgroundColor: user.role === 'ADMIN' ? '#fef2f2' : user.role === 'AGENCY' ? '#eff6ff' : '#f0fdf4',
-                                                color: user.role === 'ADMIN' ? '#b91c1c' : user.role === 'AGENCY' ? '#1d4ed8' : '#15803d',
-                                                border: `1px solid ${user.role === 'ADMIN' ? '#fecaca' : user.role === 'AGENCY' ? '#bfdbfe' : '#bbf7d0'}`
-                                            }}>
-                                                {user.role}
-                                            </span>
-                                        </td>
+                                filteredUsers.map((user, index) => {
+                                    const uFullName = user.fullName || (user as any).FullName || '';
+                                    const uUserName = user.userName || (user as any).UserName || '';
+                                    const uRole = (user.role || (user as any).Role || '').toUpperCase();
+                                    const uLocations = user.locations || user.Locations || [];
+                                    const uId = user.id || (user as any).Id;
+
+                                    return (
+                                        <tr key={uId || index} className="hover:bg-slate-50" style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.2s' }}>
+                                            <td className="text-center" style={{ color: '#64748b', fontSize: '13.5px' }}>{index + 1}</td>
+                                            <td>
+                                                <div className="font-semibold" style={{ color: '#0f172a', fontSize: '14px' }}>
+                                                    {uFullName}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div style={{ color: '#334155', fontSize: '14px' }}>
+                                                    {uUserName}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start' }}>
+                                                    <span style={{ 
+                                                        display: 'inline-block',
+                                                        padding: '4px 10px', 
+                                                        borderRadius: '6px', 
+                                                        fontSize: '12px', 
+                                                        fontWeight: 600,
+                                                        backgroundColor: uRole === 'ADMIN' ? '#fef2f2' : uRole === 'AGENCY' ? '#eff6ff' : uRole === 'LOCATION' ? '#f5f3ff' : '#f0fdf4',
+                                                        color: uRole === 'ADMIN' ? '#b91c1c' : uRole === 'AGENCY' ? '#1d4ed8' : uRole === 'LOCATION' ? '#6d28d9' : '#15803d',
+                                                        border: `1px solid ${uRole === 'ADMIN' ? '#fecaca' : uRole === 'AGENCY' ? '#bfdbfe' : uRole === 'LOCATION' ? '#ddd6fe' : '#bbf7d0'}`
+                                                    }}>
+                                                        {uRole === 'ADMIN' ? 'Quản trị viên (ADMIN)' : uRole === 'LOCATION' ? 'Địa phương (LOCATION)' : uRole === 'AGENCY' ? 'Đại lý (AGENCY)' : uRole}
+                                                    </span>
+                                                    {uRole === 'LOCATION' && uLocations.length > 0 && (
+                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', maxWidth: '280px' }}>
+                                                            {uLocations.map((locCode, lIdx) => {
+                                                                const locName = locationsMap[locCode] || locCode;
+                                                                return (
+                                                                    <span 
+                                                                        key={lIdx} 
+                                                                        style={{ 
+                                                                            display: 'inline-flex',
+                                                                            alignItems: 'center',
+                                                                            gap: '3px',
+                                                                            fontSize: '11px', 
+                                                                            padding: '2px 6px', 
+                                                                            borderRadius: '4px', 
+                                                                            backgroundColor: '#ede9fe', 
+                                                                            color: '#5b21b6',
+                                                                            border: '1px solid #ddd6fe',
+                                                                            fontWeight: 500
+                                                                        }}
+                                                                        title={`Mã tỉnh: ${locCode}`}
+                                                                    >
+                                                                        <MapPin size={10} />
+                                                                        <span>{locName}</span>
+                                                                    </span>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </td>
                                         <td>
                                             <div className="flex items-center justify-center gap-xs">
                                                 <button 
@@ -227,7 +284,8 @@ export default function UserList() {
                                             </div>
                                         </td>
                                     </tr>
-                                ))
+                                );
+                                })
                             )}
                         </tbody>
                     </table>

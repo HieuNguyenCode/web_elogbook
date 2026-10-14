@@ -39,7 +39,7 @@ export const occupationsAPI = async (): Promise<Occupations> => {
     return data.data;
 }
 
-export const LocationsAPI = async (): Promise<Locations> => {
+export const LocationsAPI = async (): Promise<Locations[]> => {
     const data = await axiosClient.get<any, any>(`/api/v2/Catalog/Locations`);
     return data.data;
 }
