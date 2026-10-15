@@ -43,16 +43,19 @@ export default function TopFishTable({
     const sorted = [...data].sort((a, b) => b.totalWeight - a.totalWeight);
 
     return (
-        <div style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '14px',
-            border: '1px solid #e2e8f0',
-            padding: '20px',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100%'
-        }}>
+        <div 
+            className="dashboard-table-card"
+            style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '14px',
+                border: '1px solid #e2e8f0',
+                padding: '20px',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%'
+            }}
+        >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                 <div>
                     <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
@@ -91,14 +94,14 @@ export default function TopFishTable({
                     <span style={{ fontSize: '13.5px' }}>{emptyMessage || 'Không có dữ liệu'}</span>
                 </div>
             ) : (
-                <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13.5px' }}>
+                <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                    <table style={{ width: '100%', minWidth: '380px', borderCollapse: 'collapse', fontSize: '13.5px' }}>
                         <thead>
                             <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748b', textAlign: 'left' }}>
-                                <th style={{ padding: '8px 6px', width: '50px', textAlign: 'center', fontWeight: 600 }}>Hạng</th>
-                                <th style={{ padding: '8px 12px', fontWeight: 600 }}>Tên loài cá</th>
-                                <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 600 }}>Sản lượng (kg)</th>
-                                <th style={{ padding: '8px 12px', width: '140px', textAlign: 'right', fontWeight: 600 }}>Tỷ trọng (%)</th>
+                                <th style={{ padding: '8px 6px', width: '50px', textAlign: 'center', fontWeight: 600, whiteSpace: 'nowrap' }}>Hạng</th>
+                                <th style={{ padding: '8px 12px', fontWeight: 600, whiteSpace: 'nowrap' }}>Tên loài cá</th>
+                                <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 600, whiteSpace: 'nowrap' }}>Sản lượng (kg)</th>
+                                <th style={{ padding: '8px 12px', width: '140px', textAlign: 'right', fontWeight: 600, whiteSpace: 'nowrap' }}>Tỷ trọng (%)</th>
                             </tr>
                         </thead>
                         <tbody>

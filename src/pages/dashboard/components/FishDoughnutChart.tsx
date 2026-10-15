@@ -148,17 +148,20 @@ export default function FishDoughnutChart({
     }, [data, theme, displayTotal]);
 
     return (
-        <div style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '14px',
-            border: '1px solid #e2e8f0',
-            padding: '20px',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100%',
-            minHeight: '380px'
-        }}>
+        <div 
+            className="dashboard-chart-card"
+            style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '14px',
+                border: '1px solid #e2e8f0',
+                padding: '20px',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',
+                minHeight: '380px'
+            }}
+        >
             <div style={{ marginBottom: '16px' }}>
                 <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
                     {title}

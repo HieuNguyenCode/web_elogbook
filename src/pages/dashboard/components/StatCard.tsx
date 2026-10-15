@@ -89,6 +89,7 @@ export default function StatCard({
 
     return (
         <div 
+            className="dashboard-stat-card"
             style={{
                 background: theme.gradient,
                 border: `1px solid ${theme.border}`,

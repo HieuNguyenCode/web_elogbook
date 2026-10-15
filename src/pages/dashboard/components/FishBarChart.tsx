@@ -146,17 +146,20 @@ export default function FishBarChart({ title, subtitle, data, theme, emptyMessag
     }, [data, theme]);
 
     return (
-        <div style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '14px',
-            border: '1px solid #e2e8f0',
-            padding: '20px',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100%',
-            minHeight: '380px'
-        }}>
+        <div 
+            className="dashboard-chart-card"
+            style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '14px',
+                border: '1px solid #e2e8f0',
+                padding: '20px',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',
+                minHeight: '380px'
+            }}
+        >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                 <div>
                     <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>

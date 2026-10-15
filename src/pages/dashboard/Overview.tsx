@@ -21,6 +21,7 @@ import TopFishTable from './components/TopFishTable';
 import MonthlyWeightTrendChart from './components/MonthlyWeightTrendChart';
 import MonthlyVoyageTrendChart from './components/MonthlyVoyageTrendChart';
 import MonthlySummaryTable from './components/MonthlySummaryTable';
+import './Overview.css';
 
 export default function Overview() {
     const currentYear = useMemo(() => new Date().getFullYear(), []);
@@ -231,46 +232,30 @@ export default function Overview() {
     }
 
     return (
-        <div className="flex flex-col h-full gap-md" style={{ overflow: 'hidden' }}>
+        <div className="overview-container">
             {/* Top Header & Year/Top Filter Bar (NẰM Ở NGOÀI card main-card) */}
-            <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: '16px',
-                flexShrink: 0
-            }}>
-                <div>
-                    <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+            <div className="overview-header">
+                <div className="overview-header-info">
+                    <h1 className="overview-title">
                         Báo Cáo Tổng Quan Khai Thác & Chuyển Tải
                     </h1>
-                    <p style={{ fontSize: '13.5px', color: '#64748b', margin: '4px 0 0 0' }}>
+                    <p className="overview-subtitle">
                         Số liệu thống kê toàn diện 12 tháng năm <strong>{selectedYear}</strong>
                     </p>
                 </div>
 
                 {/* Filters */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <div className="overview-filters">
                     {/* Chọn Năm */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>Năm:</span>
+                    <div className="overview-filter-item">
+                        <span className="overview-filter-label">Năm:</span>
                         <select
                             value={selectedYear}
                             onChange={(e) => {
                                 setSelectedYear(Number(e.target.value));
                                 setSelectedMonthLabel(null);
                             }}
-                            className="input"
-                            style={{
-                                padding: '6px 12px',
-                                borderRadius: '8px',
-                                fontSize: '13px',
-                                fontWeight: 700,
-                                color: '#0f172a',
-                                borderColor: '#cbd5e1',
-                                minWidth: '95px'
-                            }}
+                            className="overview-filter-select input"
                         >
                             {[currentYear + 1, currentYear, currentYear - 1, currentYear - 2, currentYear - 3, currentYear - 4].map(y => (
                                 <option key={y} value={y}>{y}</option>
@@ -279,21 +264,12 @@ export default function Overview() {
                     </div>
 
                     {/* Chọn Top Loài */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>Top loài:</span>
+                    <div className="overview-filter-item">
+                        <span className="overview-filter-label">Top loài:</span>
                         <select
                             value={selectedTop}
                             onChange={(e) => setSelectedTop(Number(e.target.value))}
-                            className="input"
-                            style={{
-                                padding: '6px 12px',
-                                borderRadius: '8px',
-                                fontSize: '13px',
-                                fontWeight: 700,
-                                color: '#0f172a',
-                                borderColor: '#cbd5e1',
-                                minWidth: '85px'
-                            }}
+                            className="overview-filter-select input"
                         >
                             <option value={5}>Top 5</option>
                             <option value={10}>Top 10</option>
@@ -305,16 +281,7 @@ export default function Overview() {
                     <button
                         onClick={() => void fetchReport(true)}
                         disabled={isRefreshing}
-                        className="btn btn-outline"
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            padding: '7px 14px',
-                            borderRadius: '8px',
-                            fontSize: '13px',
-                            fontWeight: 600
-                        }}
+                        className="overview-refresh-btn btn btn-outline"
                     >
                         <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
                         <span>{isRefreshing ? 'Đang nạp...' : 'Làm mới'}</span>
@@ -323,25 +290,14 @@ export default function Overview() {
             </div>
 
             {/* Khối card main-card chứa toàn bộ nội dung dashboard */}
-            <div className="card main-card h-full flex flex-col" style={{ flex: 1, minHeight: 0 }}>
-                <div style={{
-                    height: '100%',
-                    overflowY: 'auto',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '24px',
-                    padding: '4px 2px 32px'
-                }}>
+            <div className="card main-card overview-main-card">
+                <div className="overview-scroll-body">
                     {/* ========================================================================= */}
                     {/* PHẦN 1 (TRÊN ĐẦU): TỔNG QUAN CẢ NĂM & CÁC BIỂU ĐỒ 12 THÁNG CẢ NĂM         */}
                     {/* ========================================================================= */}
 
                     {/* 6 Thẻ KPI Thống Kê Cả Năm */}
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
-                gap: '16px'
-            }}>
+                    <div className="overview-kpi-grid">
                 <StatCard
                     title="Tổng số tàu quản lý"
                     value={new Intl.NumberFormat('vi-VN').format(yearlyStats.countShip)}
@@ -402,11 +358,7 @@ export default function Overview() {
             </div>
 
             {/* KHỐI BIỂU ĐỒ VẼ CẢ NĂM (12 THÁNG) - ĐẶT LÊN TRÊN ĐẦU */}
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))',
-                gap: '20px'
-            }}>
+            <div className="overview-charts-grid">
                 <MonthlyWeightTrendChart
                     months={months}
                     selectedMonthLabel={selectedMonthLabel}
@@ -430,25 +382,9 @@ export default function Overview() {
             {/* ========================================================================= */}
             {/* PHẦN 2 (Ở DƯỚI): CHI TIẾT CƠ CẤU LOÀI CÁ & BỘ LỌC TỪNG THÁNG              */}
             {/* ========================================================================= */}
-            <div style={{
-                backgroundColor: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                borderRadius: '16px',
-                padding: '24px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '20px'
-            }}>
+            <div className="overview-species-section">
                 {/* Header phần dưới: Tiêu đề & Thanh chọn tháng */}
-                <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: '14px',
-                    borderBottom: '1px solid #e2e8f0',
-                    paddingBottom: '16px'
-                }}>
+                <div className="overview-species-header">
                     <div>
                         <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <Layers size={20} color="#0284c7" />
@@ -460,21 +396,15 @@ export default function Overview() {
                     </div>
 
                     {/* Thanh lọc theo tháng */}
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        overflowX: 'auto',
-                        maxWidth: '100%',
-                        padding: '4px'
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginRight: '6px', color: '#475569', fontSize: '12px', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                    <div className="overview-month-bar">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginRight: '6px', color: '#475569', fontSize: '12px', fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0 }}>
                             <Calendar size={15} color="#0284c7" />
                             <span>Tháng:</span>
                         </div>
 
                         <button
                             onClick={() => setSelectedMonthLabel(null)}
+                            className="overview-month-btn"
                             style={{
                                 padding: '6px 12px',
                                 borderRadius: '8px',
@@ -501,6 +431,7 @@ export default function Overview() {
                                 <button
                                     key={label}
                                     onClick={() => setSelectedMonthLabel(isSelected ? null : label)}
+                                    className="overview-month-btn"
                                     style={{
                                         padding: '6px 10px',
                                         borderRadius: '8px',
@@ -575,11 +506,7 @@ export default function Overview() {
                         </h3>
                     </div>
 
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-                        gap: '20px'
-                    }}>
+                    <div className="overview-species-charts-grid">
                         <FishBarChart
                             title={`Top ${selectedTop} Loài Cá Khai Thác Nhiều Nhất`}
                             subtitle={`Khối lượng khai thác tính theo kg (${speciesViewData.scopeTitle})`}
@@ -617,11 +544,7 @@ export default function Overview() {
                         </h3>
                     </div>
 
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-                        gap: '20px'
-                    }}>
+                    <div className="overview-species-charts-grid">
                         <FishBarChart
                             title={`Top ${selectedTop} Loài Cá Chuyển Tải / Thu Mua`}
                             subtitle={`Khối lượng chuyển tải tính theo kg (${speciesViewData.scopeTitle})`}

@@ -9,16 +9,19 @@ interface Props {
 
 export default function MonthlySummaryTable({ months, selectedMonthLabel, onSelectMonth }: Props) {
     return (
-        <div style={{
-            backgroundColor: '#ffffff',
-            borderRadius: '14px',
-            border: '1px solid #e2e8f0',
-            padding: '20px',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-            display: 'flex',
-            flexDirection: 'column'
-        }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+        <div 
+            className="dashboard-table-card"
+            style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '14px',
+                border: '1px solid #e2e8f0',
+                padding: '20px',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                display: 'flex',
+                flexDirection: 'column'
+            }}
+        >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
                 <div>
                     <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Calendar size={18} color="#0f172a" />
@@ -27,6 +30,7 @@ export default function MonthlySummaryTable({ months, selectedMonthLabel, onSele
                     <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>
                         Bấm vào dòng hoặc nút &quot;Chi tiết&quot; để lọc và xem cơ cấu loài cá của tháng tương ứng
                     </p>
+                    <span className="mobile-swipe-hint">↔ Vuốt ngang để xem đủ các cột số liệu</span>
                 </div>
 
                 {selectedMonthLabel && (
@@ -40,7 +44,8 @@ export default function MonthlySummaryTable({ months, selectedMonthLabel, onSele
                             color: '#475569',
                             border: '1px solid #cbd5e1',
                             borderRadius: '6px',
-                            cursor: 'pointer'
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap'
                         }}
                     >
                         Bỏ lọc (Xem cả năm)
@@ -48,18 +53,18 @@ export default function MonthlySummaryTable({ months, selectedMonthLabel, onSele
                 )}
             </div>
 
-            <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                <table style={{ width: '100%', minWidth: '680px', borderCollapse: 'collapse', fontSize: '13px' }}>
                     <thead>
                         <tr style={{ borderBottom: '2px solid #e2e8f0', color: '#475569', backgroundColor: '#f8fafc', textAlign: 'left' }}>
-                            <th style={{ padding: '10px 12px', fontWeight: 600 }}>Tháng</th>
-                            <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center' }}>Xuất bến</th>
-                            <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center' }}>Đang trên biển</th>
-                            <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'right' }}>Khai thác (kg)</th>
-                            <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'right' }}>Chuyển tải (kg)</th>
-                            <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'right' }}>Tổng sản lượng (kg)</th>
-                            <th style={{ padding: '10px 12px', fontWeight: 600 }}>Loài khai thác chủ lực</th>
-                            <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center' }}>Hành động</th>
+                            <th style={{ padding: '10px 12px', fontWeight: 600, whiteSpace: 'nowrap' }}>Tháng</th>
+                            <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap' }}>Xuất bến</th>
+                            <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap' }}>Đang trên biển</th>
+                            <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'right', whiteSpace: 'nowrap' }}>Khai thác (kg)</th>
+                            <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'right', whiteSpace: 'nowrap' }}>Chuyển tải (kg)</th>
+                            <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'right', whiteSpace: 'nowrap' }}>Tổng sản lượng (kg)</th>
+                            <th style={{ padding: '10px 12px', fontWeight: 600, whiteSpace: 'nowrap' }}>Loài khai thác chủ lực</th>
+                            <th style={{ padding: '10px 12px', fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap' }}>Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
