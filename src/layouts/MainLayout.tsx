@@ -155,9 +155,13 @@ export default function MainLayout() {
             {/* Main Content Area */}
             <main className="main-content">
                 <div className="page-content">
-                    <div className="card main-card h-full flex flex-col">
+                    {location.pathname === '/' ? (
                         <Outlet />
-                    </div>
+                    ) : (
+                        <div className="card main-card h-full flex flex-col">
+                            <Outlet />
+                        </div>
+                    )}
                 </div>
             </main>
 
