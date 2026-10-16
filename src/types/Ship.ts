@@ -13,6 +13,8 @@ export interface Ship {
     idshipOwner?: string;
     status?: string;
     Status?: string;
+    isJourneyMonitoring?: boolean;
+    IsJourneyMonitoring?: boolean;
     [key: string]: unknown;
 }
 
@@ -56,6 +58,8 @@ export interface ShipResponse {
     secondaryOccupationId2?: string;
     status?: string;
     Status?: string;
+    isJourneyMonitoring?: boolean;
+    IsJourneyMonitoring?: boolean;
     // Backend variations / populated fields
     id?: string;
     crew?: ShipResponse['crews'];

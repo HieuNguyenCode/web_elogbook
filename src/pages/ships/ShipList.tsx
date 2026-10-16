@@ -97,13 +97,18 @@ export default function ShipList() {
                             const devSerial = detail.deviceSerial || (detail as any).DeviceSerial || '';
                             const ownerName = detail.shipOwner?.fullName || detail.ShipOwner?.fullName || detail.shipOwnerName || '';
                             const detailStatus = detail.status ?? (detail as any).Status;
+                            const rawMonitoring = detail.isJourneyMonitoring ?? (detail as any).IsJourneyMonitoring;
+                            const isMonitoring = rawMonitoring !== undefined 
+                                ? (typeof rawMonitoring === 'boolean' ? rawMonitoring : String(rawMonitoring).toLowerCase() === 'true' || rawMonitoring === 1)
+                                : undefined;
                             return {
                                 id: s.id,
                                 serial: shipSerial,
                                 deviceSerial: devSerial,
                                 ownerName: ownerName,
                                 idshipOwner: detail.idshipOwner,
-                                status: detailStatus
+                                status: detailStatus,
+                                isJourneyMonitoring: isMonitoring
                             };
                         }
                     } catch { /* ignore */
@@ -122,6 +127,7 @@ export default function ShipList() {
                                 ownerName?: string;
                                 idshipOwner?: string;
                                 status?: string;
+                                isJourneyMonitoring?: boolean;
                             };
                             const owner = val.ownerName || (val.idshipOwner ? ownersList.find(o => o.id === val.idshipOwner)?.fullName : undefined);
                             return {
@@ -133,7 +139,8 @@ export default function ShipList() {
                                     ShipOwner?: { fullName?: string },
                                     shipOwnerName?: string
                                 }).ownerName,
-                                status: val.status !== undefined ? val.status : (s.status ?? (s as any).Status)
+                                status: val.status !== undefined ? val.status : (s.status ?? (s as any).Status),
+                                isJourneyMonitoring: val.isJourneyMonitoring !== undefined ? val.isJourneyMonitoring : (s.isJourneyMonitoring ?? (s as any).IsJourneyMonitoring)
                             };
                         }
                         return s;
@@ -381,10 +388,47 @@ export default function ShipList() {
                                                     <ShipIcon size={16}/>
                                                 </div>
                                                 <div>
-                                                        <span className="font-semibold"
-                                                              style={{color: '#0f172a', fontSize: '14.5px'}}>
-                                                            {ship.name || 'Chưa có tên'}
-                                                        </span>
+                                                    <span className="font-semibold"
+                                                          style={{color: '#0f172a', fontSize: '14.5px'}}>
+                                                        {ship.name || 'Chưa có tên'}
+                                                    </span>
+                                                    {ship.isJourneyMonitoring !== undefined && (
+                                                        <div style={{ marginTop: '2px' }}>
+                                                            {ship.isJourneyMonitoring ? (
+                                                                <span style={{
+                                                                    fontSize: '11px',
+                                                                    padding: '1px 6px',
+                                                                    borderRadius: '4px',
+                                                                    fontWeight: 600,
+                                                                    backgroundColor: '#ecfdf5',
+                                                                    color: '#059669',
+                                                                    border: '1px solid #a7f3d0',
+                                                                    display: 'inline-flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '4px'
+                                                                }}>
+                                                                    <span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#10b981' }} />
+                                                                    GSHT: Có
+                                                                </span>
+                                                            ) : (
+                                                                <span style={{
+                                                                    fontSize: '11px',
+                                                                    padding: '1px 6px',
+                                                                    borderRadius: '4px',
+                                                                    fontWeight: 500,
+                                                                    backgroundColor: '#f8fafc',
+                                                                    color: '#64748b',
+                                                                    border: '1px solid #e2e8f0',
+                                                                    display: 'inline-flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '4px'
+                                                                }}>
+                                                                    <span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#94a3b8' }} />
+                                                                    GSHT: Không
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </td>

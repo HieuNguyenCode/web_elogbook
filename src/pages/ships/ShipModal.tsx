@@ -37,6 +37,7 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
     const [formData, setFormData] = useState<Partial<ShipResponse>>({
         name: '',
         serial: '',
+        isJourneyMonitoring: false,
         crews: []
     });
 
@@ -91,7 +92,11 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
         if (isOpen && ship && mode !== 'create') {
             const initialStatusRaw = (ship as any).status ?? (ship as any).Status;
             const initialStatus = initialStatusRaw ? (String(initialStatusRaw).trim().toUpperCase() === 'DEACTIVATED' ? 'DEACTIVATED' : 'ACTIVATED') : 'ACTIVATED';
-            setTimeout(() => setFormData({ status: initialStatus }), 0);
+            const initialMonitoringRaw = ship.isJourneyMonitoring ?? (ship as any).IsJourneyMonitoring;
+            const initialMonitoring = typeof initialMonitoringRaw === 'boolean'
+                ? initialMonitoringRaw
+                : (String(initialMonitoringRaw).toLowerCase() === 'true' || initialMonitoringRaw === 1);
+            setTimeout(() => setFormData({ status: initialStatus, isJourneyMonitoring: initialMonitoring }), 0);
             setTimeout(() => setIsFetchingDetail(true), 0);
             shipDetailAPI(ship.id)
                 .then((fullShip: ShipResponse) => {
@@ -101,9 +106,14 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                     }
                     const rawStatus = fullShip.status ?? (fullShip as any).Status ?? ship.status ?? (ship as any).Status;
                     const normalizedStatus = rawStatus ? (String(rawStatus).trim().toUpperCase() === 'DEACTIVATED' ? 'DEACTIVATED' : 'ACTIVATED') : 'ACTIVATED';
+                    const rawMonitoring = fullShip.isJourneyMonitoring ?? (fullShip as any).IsJourneyMonitoring ?? ship.isJourneyMonitoring ?? (ship as any).IsJourneyMonitoring ?? false;
+                    const isMonitored = typeof rawMonitoring === 'boolean'
+                        ? rawMonitoring
+                        : (String(rawMonitoring).toLowerCase() === 'true' || rawMonitoring === 1);
                     const mappedData: Partial<ShipResponse> = {
                         ...fullShip,
                         status: normalizedStatus,
+                        isJourneyMonitoring: isMonitored,
                         mainOccupationId: fullShip.mainOccupationId || fullShip.mainOccupation?.id || fullShip.MainOccupation?.id || '',
                         secondaryOccupationId1: fullShip.secondaryOccupationId1 || fullShip.secondaryOccupation1?.id || fullShip.SecondaryOccupation1?.id || '',
                         secondaryOccupationId2: fullShip.secondaryOccupationId2 || fullShip.secondaryOccupation2?.id || fullShip.SecondaryOccupation2?.id || '',
@@ -133,7 +143,7 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                     setIsFetchingDetail(false);
                 });
         } else if (isOpen && mode === 'create') {
-            setTimeout(() => setFormData({name: "", serial: "", deviceSerial: "", status: "ACTIVATED", crews: []}), 0);
+            setTimeout(() => setFormData({name: "", serial: "", deviceSerial: "", status: "ACTIVATED", isJourneyMonitoring: false, crews: []}), 0);
         }
 
         setTimeout(() => setMainError(null), 0);
@@ -167,7 +177,10 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const {name, value, type} = e.target;
-        const val = type === 'number' ? Number(value) : value;
+        let val: any = type === 'number' ? Number(value) : value;
+        if (name === 'isJourneyMonitoring') {
+            val = value === 'true';
+        }
         const newFormData = {...formData, [name]: val};
 
         if (name === 'dimension1' || name === 'dimension2') {
@@ -235,6 +248,7 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                 serial: formData.serial || "-",
                 idshipOwner: formData.idshipOwner || "00000000-0000-0000-0000-000000000000",
                 status: formData.status || "ACTIVATED",
+                isJourneyMonitoring: Boolean(formData.isJourneyMonitoring),
                 mainOccupationId: formData.mainOccupationId || "00000000-0000-0000-0000-000000000000",
                 lengthOverall: formData.lengthOverall ? Number(formData.lengthOverall) : 0,
                 totalPower: formData.totalPower ? Number(formData.totalPower) : 0,
@@ -644,6 +658,43 @@ export default function ShipModal({isOpen, onClose, mode, ship, onSubmit}: ShipM
                                         <option value="ACTIVATED">Đang hoạt động (ACTIVATED)</option>
                                         <option value="DEACTIVATED">Ngừng hoạt động (DEACTIVATED)</option>
                                     </select>
+                                </div>
+
+                                <div>
+                                    <label style={labelStyle}>Giám sát hành trình</label>
+                                    {isReadOnly ? (
+                                        <div style={{
+                                            ...readOnlyStyle,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px'
+                                        }}>
+                                            <span style={{
+                                                display: 'inline-block',
+                                                width: '8px',
+                                                height: '8px',
+                                                borderRadius: '50%',
+                                                backgroundColor: formData.isJourneyMonitoring ? '#10b981' : '#94a3b8'
+                                            }} />
+                                            <span style={{
+                                                fontWeight: 600,
+                                                color: formData.isJourneyMonitoring ? '#059669' : '#64748b'
+                                            }}>
+                                                {formData.isJourneyMonitoring ? 'Có (true)' : 'Không (false)'}
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <select
+                                            name="isJourneyMonitoring"
+                                            value={formData.isJourneyMonitoring ? 'true' : 'false'}
+                                            onChange={(e) => setFormData(prev => ({...prev, isJourneyMonitoring: e.target.value === 'true'}))}
+                                            className="input"
+                                            style={controlStyle}
+                                        >
+                                            <option value="true">Có (true)</option>
+                                            <option value="false">Không (false)</option>
+                                        </select>
+                                    )}
                                 </div>
                                 
                                 <div>
